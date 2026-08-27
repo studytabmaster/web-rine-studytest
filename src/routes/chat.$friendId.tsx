@@ -34,7 +34,9 @@ function ChatPage() {
   const [friend, setFriend] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
+  const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -72,6 +74,14 @@ function ChatPage() {
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        (payload) => {
+          const m = payload.new as Message;
+          setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m } : x)));
+        },
+      )
       .subscribe();
 
     return () => {
@@ -79,6 +89,20 @@ function ChatPage() {
       void supabase.removeChannel(channel);
     };
   }, [user, friendId]);
+
+  // 受信したメッセージを既読にする
+  useEffect(() => {
+    if (!user) return;
+    const unread = messages.filter((m) => m.receiver_id === user.id && !m.read_at);
+    if (unread.length === 0) return;
+    void supabase
+      .from("messages")
+      .update({ read_at: new Date().toISOString() })
+      .in(
+        "id",
+        unread.map((m) => m.id),
+      );
+  }, [messages, user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -97,6 +121,37 @@ function ChatPage() {
       setText(content);
     }
   };
+
+  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("画像ファイルを選んでください");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("画像は10MBまでです");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("chat-images")
+      .upload(path, file, { contentType: file.type });
+    if (upErr) {
+      setUploading(false);
+      toast.error("画像をアップロードできませんでした");
+      return;
+    }
+    const { error } = await supabase
+      .from("messages")
+      .insert({ sender_id: user.id, receiver_id: friendId, content: "", image_url: path });
+    setUploading(false);
+    if (error) toast.error("画像を送信できませんでした");
+  };
+
 
   if (loading) return null;
 
