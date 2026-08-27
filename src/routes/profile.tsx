@@ -54,10 +54,14 @@ function ProfilePage() {
       })
       .eq("id", user.id);
     setBusy(false);
-    if (error) return toast.error("保存できませんでした");
+    if (error) {
+      toast.error("保存できませんでした");
+      return;
+    }
     await refreshProfile();
     toast.success("プロフィールを保存しました");
   };
+
 
   const copyCode = async () => {
     if (!profile) return;
