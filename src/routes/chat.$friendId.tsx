@@ -208,13 +208,28 @@ function ChatPage() {
             <div key={m.id} className={cn("flex items-end gap-1", mine && "flex-row-reverse")}>
               <div
                 className={cn(
-                  "max-w-[72%] rounded-2xl px-3.5 py-2 text-sm shadow-soft",
-                  mine ? "bubble-out rounded-br-sm" : "bubble-in rounded-bl-sm",
+                  "max-w-[72%] shadow-soft",
+                  m.image_url
+                    ? "overflow-hidden rounded-2xl"
+                    : cn(
+                        "rounded-2xl px-3.5 py-2 text-sm",
+                        mine ? "bubble-out rounded-br-sm" : "bubble-in rounded-bl-sm",
+                      ),
                 )}
               >
-                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                {m.image_url ? (
+                  <ChatImage path={m.image_url} />
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                )}
               </div>
-              <span className="pb-1 text-[10px] text-foreground/50">
+              <span
+                className={cn(
+                  "flex flex-col pb-1 text-[10px] text-foreground/50",
+                  mine ? "items-end" : "items-start",
+                )}
+              >
+                {mine && m.read_at && <span className="text-foreground/60">既読</span>}
                 {formatTime(m.created_at)}
               </span>
             </div>
@@ -227,12 +242,31 @@ function ChatPage() {
         onSubmit={send}
         className="flex items-center gap-2 border-t border-border bg-background px-3 py-3"
       >
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={pickImage}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          aria-label="画像を送る"
+          disabled={uploading}
+          onClick={() => fileRef.current?.click()}
+        >
+          <ImagePlus className="size-5" />
+        </Button>
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="メッセージを入力"
           className="rounded-full"
         />
+
         <Button type="submit" variant="brand" size="icon" className="rounded-full" aria-label="送信">
           <Send className="size-4" />
         </Button>
