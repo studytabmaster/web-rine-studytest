@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
   component: TalksPage,
 });
 
-type Row = { friend: Profile; last?: Message };
+type Row = { friend: Profile; last?: Message | undefined };
 
 function TalksPage() {
   const { user } = useAuth();
