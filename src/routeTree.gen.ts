@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ChatFriendIdRouteImport } from './routes/chat.$friendId'
+import { Route as FriendFriendIdRouteImport } from './routes/friend.$friendId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const ChatFriendIdRoute = ChatFriendIdRouteImport.update({
   path: '/chat/$friendId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FriendFriendIdRoute = FriendFriendIdRouteImport.update({
+  id: '/friend/$friendId',
+  path: '/friend/$friendId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/friends': typeof FriendsRoute
   '/profile': typeof ProfileRoute
   '/chat/$friendId': typeof ChatFriendIdRoute
+  '/friend/$friendId': typeof FriendFriendIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/friends': typeof FriendsRoute
   '/profile': typeof ProfileRoute
   '/chat/$friendId': typeof ChatFriendIdRoute
+  '/friend/$friendId': typeof FriendFriendIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,33 @@ export interface FileRoutesById {
   '/friends': typeof FriendsRoute
   '/profile': typeof ProfileRoute
   '/chat/$friendId': typeof ChatFriendIdRoute
+  '/friend/$friendId': typeof FriendFriendIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/friends' | '/profile' | '/chat/$friendId'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/friends'
+    | '/profile'
+    | '/chat/$friendId'
+    | '/friend/$friendId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/friends' | '/profile' | '/chat/$friendId'
-  id: '__root__' | '/' | '/auth' | '/friends' | '/profile' | '/chat/$friendId'
+  to:
+    | '/'
+    | '/auth'
+    | '/friends'
+    | '/profile'
+    | '/chat/$friendId'
+    | '/friend/$friendId'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/friends'
+    | '/profile'
+    | '/chat/$friendId'
+    | '/friend/$friendId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +105,7 @@ export interface RootRouteChildren {
   FriendsRoute: typeof FriendsRoute
   ProfileRoute: typeof ProfileRoute
   ChatFriendIdRoute: typeof ChatFriendIdRoute
+  FriendFriendIdRoute: typeof FriendFriendIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatFriendIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/friend/$friendId': {
+      id: '/friend/$friendId'
+      path: '/friend/$friendId'
+      fullPath: '/friend/$friendId'
+      preLoaderRoute: typeof FriendFriendIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   FriendsRoute: FriendsRoute,
   ProfileRoute: ProfileRoute,
   ChatFriendIdRoute: ChatFriendIdRoute,
+  FriendFriendIdRoute: FriendFriendIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
