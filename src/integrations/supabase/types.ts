@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       call_signals: {
         Row: {
           created_at: string
@@ -125,6 +146,33 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          detail: string
+          id: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string
+          id?: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string
+          id?: string
+          reason?: string
+          reported_id?: string
+          reporter_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -149,6 +197,7 @@ export type Database = {
         }
       }
       generate_friend_code: { Args: never; Returns: string }
+      is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
