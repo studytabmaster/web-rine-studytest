@@ -14,13 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      call_signals: {
+        Row: {
+          created_at: string
+          from_user: string
+          id: string
+          kind: string
+          payload: Json | null
+          to_user: string
+          video: boolean
+        }
+        Insert: {
+          created_at?: string
+          from_user: string
+          id?: string
+          kind: string
+          payload?: Json | null
+          to_user: string
+          video?: boolean
+        }
+        Update: {
+          created_at?: string
+          from_user?: string
+          id?: string
+          kind?: string
+          payload?: Json | null
+          to_user?: string
+          video?: boolean
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          created_at: string
+          friend_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          friend_code: string
+          id: string
+          status_message: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          friend_code: string
+          id: string
+          status_message?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          friend_code?: string
+          id?: string
+          status_message?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_friend_by_code: {
+        Args: { _code: string }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          friend_code: string
+          id: string
+          status_message: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      generate_friend_code: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
