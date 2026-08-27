@@ -151,5 +151,31 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family:
+      "Zen Maru Gothic",
+      "Hiragino Sans",
+      "Noto Sans JP",
+      system-ui,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
+
+@utility bg-chat {
+  background-color: var(--chat-bg);
+}
+@utility bg-brand-gradient {
+  background-image: var(--gradient-brand);
+}
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+@utility bubble-out {
+  background-color: var(--bubble-out);
+  color: var(--bubble-out-foreground);
+}
+@utility bubble-in {
+  background-color: var(--bubble-in);
+  color: var(--bubble-in-foreground);
+}
+
