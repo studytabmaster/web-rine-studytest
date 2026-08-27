@@ -125,7 +125,7 @@ function TalksPage() {
                   <p className="truncate font-semibold">{friend.display_name}</p>
                   <p className="truncate text-sm text-muted-foreground">
                     {last
-                      ? `${last.sender_id === user?.id ? "自分: " : ""}${last.content}`
+                      ? `${last.sender_id === user?.id ? "自分: " : ""}${last.image_url ? "画像を送信しました" : last.content}`
                       : friend.status_message || "トークを始めましょう"}
                   </p>
                 </div>
