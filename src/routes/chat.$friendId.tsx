@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Phone, Send, Video } from "lucide-react";
+import { ArrowLeft, ImagePlus, Phone, Send, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "@/components/CallProvider";
+import { ChatImage } from "@/components/ChatImage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,9 @@ function ChatPage() {
   const [friend, setFriend] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
+  const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -71,6 +74,14 @@ function ChatPage() {
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        (payload) => {
+          const m = payload.new as Message;
+          setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m } : x)));
+        },
+      )
       .subscribe();
 
     return () => {
@@ -78,6 +89,20 @@ function ChatPage() {
       void supabase.removeChannel(channel);
     };
   }, [user, friendId]);
+
+  // 受信したメッセージを既読にする
+  useEffect(() => {
+    if (!user) return;
+    const unread = messages.filter((m) => m.receiver_id === user.id && !m.read_at);
+    if (unread.length === 0) return;
+    void supabase
+      .from("messages")
+      .update({ read_at: new Date().toISOString() })
+      .in(
+        "id",
+        unread.map((m) => m.id),
+      );
+  }, [messages, user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -96,6 +121,37 @@ function ChatPage() {
       setText(content);
     }
   };
+
+  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("画像ファイルを選んでください");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("画像は10MBまでです");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("chat-images")
+      .upload(path, file, { contentType: file.type });
+    if (upErr) {
+      setUploading(false);
+      toast.error("画像をアップロードできませんでした");
+      return;
+    }
+    const { error } = await supabase
+      .from("messages")
+      .insert({ sender_id: user.id, receiver_id: friendId, content: "", image_url: path });
+    setUploading(false);
+    if (error) toast.error("画像を送信できませんでした");
+  };
+
 
   if (loading) return null;
 
@@ -152,13 +208,28 @@ function ChatPage() {
             <div key={m.id} className={cn("flex items-end gap-1", mine && "flex-row-reverse")}>
               <div
                 className={cn(
-                  "max-w-[72%] rounded-2xl px-3.5 py-2 text-sm shadow-soft",
-                  mine ? "bubble-out rounded-br-sm" : "bubble-in rounded-bl-sm",
+                  "max-w-[72%] shadow-soft",
+                  m.image_url
+                    ? "overflow-hidden rounded-2xl"
+                    : cn(
+                        "rounded-2xl px-3.5 py-2 text-sm",
+                        mine ? "bubble-out rounded-br-sm" : "bubble-in rounded-bl-sm",
+                      ),
                 )}
               >
-                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                {m.image_url ? (
+                  <ChatImage path={m.image_url} />
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                )}
               </div>
-              <span className="pb-1 text-[10px] text-foreground/50">
+              <span
+                className={cn(
+                  "flex flex-col pb-1 text-[10px] text-foreground/50",
+                  mine ? "items-end" : "items-start",
+                )}
+              >
+                {mine && m.read_at && <span className="text-foreground/60">既読</span>}
                 {formatTime(m.created_at)}
               </span>
             </div>
@@ -171,12 +242,31 @@ function ChatPage() {
         onSubmit={send}
         className="flex items-center gap-2 border-t border-border bg-background px-3 py-3"
       >
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={pickImage}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          aria-label="画像を送る"
+          disabled={uploading}
+          onClick={() => fileRef.current?.click()}
+        >
+          <ImagePlus className="size-5" />
+        </Button>
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="メッセージを入力"
           className="rounded-full"
         />
+
         <Button type="submit" variant="brand" size="icon" className="rounded-full" aria-label="送信">
           <Send className="size-4" />
         </Button>

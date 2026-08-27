@@ -95,7 +95,7 @@ function ProfilePage() {
             </Button>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            このIDを友だちに伝えると、追加してもらえます。
+            このIDを友だちに伝えると、追加してもらえます。IDは登録時に自動で割り当てられ、変更できません。
           </p>
         </div>
 
