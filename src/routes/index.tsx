@@ -209,9 +209,10 @@ function TalksPage() {
             return (
               <li key={friend.id} className="flex items-center">
                 <Link
-                  to="/chat/$friendId"
+                  to="/friend/$friendId"
                   params={{ friendId: friend.id }}
-                  className="flex min-w-0 flex-1 items-center gap-3 py-4 pl-5 pr-2 transition-colors hover:bg-muted/60"
+                  className="shrink-0 py-4 pl-5 pr-1"
+                  aria-label={`${friend.display_name} のプロフィール`}
                 >
                   <Avatar className="size-12">
                     <AvatarImage src={friend.avatar_url ?? undefined} alt={friend.display_name} />
@@ -219,6 +220,12 @@ function TalksPage() {
                       {initials(friend.display_name)}
                     </AvatarFallback>
                   </Avatar>
+                </Link>
+                <Link
+                  to="/chat/$friendId"
+                  params={{ friendId: friend.id }}
+                  className="flex min-w-0 flex-1 items-center gap-3 py-4 pr-2 transition-colors hover:bg-muted/60"
+                >
                   <div className="min-w-0 flex-1">
                     <p className={cn("truncate", unread > 0 ? "font-bold" : "font-semibold")}>
                       {friend.display_name}

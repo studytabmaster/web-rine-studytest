@@ -192,7 +192,14 @@ function ChatPage() {
               {initials(friend?.display_name ?? "?")}
             </AvatarFallback>
           </Avatar>
-          <span className="truncate font-semibold">{friend?.display_name ?? "..."}</span>
+          <span className="min-w-0">
+            <span className="block truncate font-semibold leading-tight">
+              {friend?.display_name ?? "..."}
+            </span>
+            <span className="block font-mono text-[11px] leading-tight text-muted-foreground">
+              ID: {friend?.friend_code ?? "········"}
+            </span>
+          </span>
         </Link>
         <Button
           variant="ghost"
