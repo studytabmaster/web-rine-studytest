@@ -119,12 +119,35 @@ function TalksPage() {
 
   const setThreadRead = async (friendId: string, read: boolean) => {
     if (!user) return;
-    const query = supabase
-      .from("messages")
-      .update({ read_at: read ? new Date().toISOString() : null })
-      .eq("sender_id", friendId)
-      .eq("receiver_id", user.id);
-    const { error } = read ? await query.is("read_at", null) : await query;
+    let error = null;
+    if (read) {
+      const res = await supabase
+        .from("messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("sender_id", friendId)
+        .eq("receiver_id", user.id)
+        .is("read_at", null);
+      error = res.error;
+    } else {
+      // 未読に戻すのは直近の受信メッセージ1件だけ
+      const { data: latest } = await supabase
+        .from("messages")
+        .select("id")
+        .eq("sender_id", friendId)
+        .eq("receiver_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!latest) {
+        toast.error("未読にできるメッセージがありません");
+        return;
+      }
+      const res = await supabase
+        .from("messages")
+        .update({ read_at: null })
+        .eq("id", latest.id);
+      error = res.error;
+    }
     if (error) {
       toast.error("変更できませんでした");
       return;

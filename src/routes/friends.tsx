@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "@/components/CallProvider";
+import { useBlocks } from "@/hooks/useBlocks";
 import { AppShell } from "@/components/AppShell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/friends")({
 function FriendsPage() {
   const { user, profile } = useAuth();
   const { startCall } = useCall();
+  const { isBlocked } = useBlocks();
   const [friends, setFriends] = useState<Profile[]>([]);
   const [code, setCode] = useState("");
   const [open, setOpen] = useState(false);
@@ -139,7 +141,7 @@ function FriendsPage() {
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{f.display_name}</p>
                   <p className="truncate text-sm text-muted-foreground">
-                    {f.status_message || `ID: ${f.friend_code}`}
+                    {isBlocked(f.id) ? "ブロック中" : f.status_message || `ID: ${f.friend_code}`}
                   </p>
                 </div>
               </Link>
@@ -153,6 +155,7 @@ function FriendsPage() {
                   variant="ghost"
                   size="icon"
                   aria-label="音声通話"
+                  disabled={isBlocked(f.id)}
                   onClick={() => startCall(f, false)}
                 >
                   <Phone className="size-5" />
@@ -161,6 +164,7 @@ function FriendsPage() {
                   variant="ghost"
                   size="icon"
                   aria-label="ビデオ通話"
+                  disabled={isBlocked(f.id)}
                   onClick={() => startCall(f, true)}
                 >
                   <Video className="size-5" />
