@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, MessageSquare, Phone, UserMinus, Video } from "lucide-react";
+import { ArrowLeft, Ban, Flag, MessageSquare, Phone, UserMinus, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "@/components/CallProvider";
+import { useBlocks } from "@/hooks/useBlocks";
+import { ReportDialog } from "@/components/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { initials, type Profile } from "@/lib/rine";
@@ -30,6 +32,8 @@ function FriendProfilePage() {
   const { startCall } = useCall();
   const navigate = useNavigate();
   const [friend, setFriend] = useState<Profile | null>(null);
+  const { isBlocked, block, unblock } = useBlocks();
+  const blocked = isBlocked(friendId);
 
   useEffect(() => {
     void supabase
@@ -84,7 +88,7 @@ function FriendProfilePage() {
         <Button
           variant="secondary"
           className="h-20 flex-col rounded-2xl"
-          disabled={!friend}
+          disabled={!friend || blocked}
           onClick={() => friend && startCall(friend, false)}
         >
           <Phone className="size-6" />
@@ -93,7 +97,7 @@ function FriendProfilePage() {
         <Button
           variant="secondary"
           className="h-20 flex-col rounded-2xl"
-          disabled={!friend}
+          disabled={!friend || blocked}
           onClick={() => friend && startCall(friend, true)}
         >
           <Video className="size-6" />
@@ -101,12 +105,45 @@ function FriendProfilePage() {
         </Button>
       </div>
 
-      <div className="px-6">
+      <div className="space-y-1 px-6">
+        {blocked && (
+          <p className="rounded-2xl bg-muted px-4 py-3 text-center text-xs text-muted-foreground">
+            この相手をブロック中です。メッセージの送受信と通話はできません。
+          </p>
+        )}
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={async () => {
+            if (!friend) return;
+            if (blocked) {
+              if (await unblock(friend.id)) toast.success("ブロックを解除しました");
+            } else if (await block(friend.id)) {
+              toast.success("ブロックしました");
+            }
+          }}
+        >
+          <Ban className="mr-1 size-4" />
+          {blocked ? "ブロックを解除" : "ブロックする"}
+        </Button>
+        {friend && (
+          <ReportDialog
+            targetId={friend.id}
+            targetName={friend.display_name}
+            trigger={
+              <Button variant="ghost" className="w-full">
+                <Flag className="mr-1 size-4" />
+                通報する
+              </Button>
+            }
+          />
+        )}
         <Button variant="ghost" className="w-full text-destructive" onClick={remove}>
           <UserMinus className="mr-1 size-4" />
           友だちから削除
         </Button>
       </div>
+
     </div>
   );
 }
