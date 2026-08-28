@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, MessageSquare, Phone, UserMinus, Video } from "lucide-react";
+import { ArrowLeft, Ban, Flag, MessageSquare, Phone, UserMinus, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "@/components/CallProvider";
+import { useBlocks } from "@/hooks/useBlocks";
+import { ReportDialog } from "@/components/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { initials, type Profile } from "@/lib/rine";
@@ -30,6 +32,8 @@ function FriendProfilePage() {
   const { startCall } = useCall();
   const navigate = useNavigate();
   const [friend, setFriend] = useState<Profile | null>(null);
+  const { isBlocked, block, unblock } = useBlocks();
+  const blocked = isBlocked(friendId);
 
   useEffect(() => {
     void supabase
