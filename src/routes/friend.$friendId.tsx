@@ -101,12 +101,45 @@ function FriendProfilePage() {
         </Button>
       </div>
 
-      <div className="px-6">
+      <div className="space-y-1 px-6">
+        {blocked && (
+          <p className="rounded-2xl bg-muted px-4 py-3 text-center text-xs text-muted-foreground">
+            この相手をブロック中です。メッセージの送受信と通話はできません。
+          </p>
+        )}
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={async () => {
+            if (!friend) return;
+            if (blocked) {
+              if (await unblock(friend.id)) toast.success("ブロックを解除しました");
+            } else if (await block(friend.id)) {
+              toast.success("ブロックしました");
+            }
+          }}
+        >
+          <Ban className="mr-1 size-4" />
+          {blocked ? "ブロックを解除" : "ブロックする"}
+        </Button>
+        {friend && (
+          <ReportDialog
+            targetId={friend.id}
+            targetName={friend.display_name}
+            trigger={
+              <Button variant="ghost" className="w-full">
+                <Flag className="mr-1 size-4" />
+                通報する
+              </Button>
+            }
+          />
+        )}
         <Button variant="ghost" className="w-full text-destructive" onClick={remove}>
           <UserMinus className="mr-1 size-4" />
           友だちから削除
         </Button>
       </div>
+
     </div>
   );
 }
