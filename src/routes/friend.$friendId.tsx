@@ -88,7 +88,7 @@ function FriendProfilePage() {
         <Button
           variant="secondary"
           className="h-20 flex-col rounded-2xl"
-          disabled={!friend}
+          disabled={!friend || blocked}
           onClick={() => friend && startCall(friend, false)}
         >
           <Phone className="size-6" />
@@ -97,7 +97,7 @@ function FriendProfilePage() {
         <Button
           variant="secondary"
           className="h-20 flex-col rounded-2xl"
-          disabled={!friend}
+          disabled={!friend || blocked}
           onClick={() => friend && startCall(friend, true)}
         >
           <Video className="size-6" />

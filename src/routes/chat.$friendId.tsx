@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ImagePlus, Phone, Send, Video } from "lucide-react";
+import { ArrowLeft, Ban, Flag, ImagePlus, MoreVertical, Phone, Send, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "@/components/CallProvider";
+import { useBlocks } from "@/hooks/useBlocks";
+import { ReportDialog } from "@/components/ReportDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ChatImage } from "@/components/ChatImage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -31,6 +39,8 @@ function ChatPage() {
   const { friendId } = Route.useParams();
   const { user, loading } = useAuth();
   const { startCall } = useCall();
+  const { isBlocked, block, unblock } = useBlocks();
+  const blocked = isBlocked(friendId);
   const [friend, setFriend] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
@@ -112,6 +122,10 @@ function ChatPage() {
     e.preventDefault();
     const content = text.trim();
     if (!content || !user) return;
+    if (blocked) {
+      toast.error("ブロック中の相手には送信できません");
+      return;
+    }
     setText("");
     const { error } = await supabase
       .from("messages")
@@ -126,6 +140,10 @@ function ChatPage() {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !user) return;
+    if (blocked) {
+      toast.error("ブロック中の相手には送信できません");
+      return;
+    }
     if (!file.type.startsWith("image/")) {
       toast.error("画像ファイルを選んでください");
       return;
@@ -180,7 +198,7 @@ function ChatPage() {
           variant="ghost"
           size="icon"
           aria-label="音声通話"
-          disabled={!friend}
+          disabled={!friend || blocked}
           onClick={() => friend && startCall(friend, false)}
         >
           <Phone className="size-5" />
@@ -189,11 +207,44 @@ function ChatPage() {
           variant="ghost"
           size="icon"
           aria-label="ビデオ通話"
-          disabled={!friend}
+          disabled={!friend || blocked}
           onClick={() => friend && startCall(friend, true)}
         >
           <Video className="size-5" />
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="メニュー">
+              <MoreVertical className="size-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onSelect={async () => {
+                if (blocked) {
+                  if (await unblock(friendId)) toast.success("ブロックを解除しました");
+                } else if (await block(friendId)) {
+                  toast.success("ブロックしました");
+                }
+              }}
+            >
+              <Ban className="mr-2 size-4" />
+              {blocked ? "ブロックを解除" : "ブロックする"}
+            </DropdownMenuItem>
+            {friend && (
+              <ReportDialog
+                targetId={friend.id}
+                targetName={friend.display_name}
+                trigger={
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Flag className="mr-2 size-4" />
+                    通報する
+                  </DropdownMenuItem>
+                }
+              />
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
@@ -238,6 +289,20 @@ function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
+      {blocked ? (
+        <div className="border-t border-border bg-background px-5 py-4 text-center text-sm text-muted-foreground">
+          この相手をブロック中です。メッセージの送受信はできません。
+          <button
+            type="button"
+            className="ml-1 font-semibold text-primary hover:underline"
+            onClick={async () => {
+              if (await unblock(friendId)) toast.success("ブロックを解除しました");
+            }}
+          >
+            解除する
+          </button>
+        </div>
+      ) : (
       <form
         onSubmit={send}
         className="flex items-center gap-2 border-t border-border bg-background px-3 py-3"
@@ -271,6 +336,7 @@ function ChatPage() {
           <Send className="size-4" />
         </Button>
       </form>
+      )}
     </div>
   );
 }
