@@ -19,7 +19,7 @@ export function useBlocks() {
     if (!user) return;
     void load();
     const channel = supabase
-      .channel("blocks-sync")
+      .channel(`blocks-sync-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "blocks" }, () => {
         void load();
       })
