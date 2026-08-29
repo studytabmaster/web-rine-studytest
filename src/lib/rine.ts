@@ -53,3 +53,28 @@ export function formatDuration(seconds: number) {
     .padStart(2, "0");
   return `${m}:${s}`;
 }
+
+export type Group = {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GroupMember = {
+  id: string;
+  group_id: string;
+  user_id: string;
+  created_at: string;
+};
+
+export type GroupMessage = {
+  id: string;
+  group_id: string;
+  sender_id: string;
+  content: string;
+  image_url: string | null;
+  created_at: string;
+};
