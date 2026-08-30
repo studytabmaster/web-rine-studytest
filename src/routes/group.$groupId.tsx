@@ -157,9 +157,28 @@ function GroupChatPage() {
   };
 
   const leave = async () => {
-    if (!user) return;
-    await supabase.from("group_members").delete().eq("group_id", groupId).eq("user_id", user.id);
+    if (!user || isOwner) return;
+    const { error } = await supabase
+      .from("group_members")
+      .delete()
+      .eq("group_id", groupId)
+      .eq("user_id", user.id);
+    if (error) {
+      toast.error("退出できませんでした");
+      return;
+    }
     toast.success("グループを退出しました");
+    void navigate({ to: "/groups" });
+  };
+
+  const deleteGroup = async () => {
+    if (!user || !isOwner) return;
+    const { error } = await supabase.from("groups").delete().eq("id", groupId);
+    if (error) {
+      toast.error("グループを削除できませんでした");
+      return;
+    }
+    toast.success("グループを削除しました");
     void navigate({ to: "/groups" });
   };
 
@@ -195,6 +214,7 @@ function GroupChatPage() {
             void loadMembers();
           }}
           onLeave={leave}
+          onDeleteGroup={deleteGroup}
         />
       </header>
 
