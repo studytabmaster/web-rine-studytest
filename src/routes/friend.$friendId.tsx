@@ -105,6 +105,18 @@ function FriendProfilePage() {
         </Button>
       </div>
 
+      <div className="px-6 pb-2">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+          <p className="text-xs text-muted-foreground">識別フレンドID（なりすまし対策）</p>
+          <p className="mt-1 font-mono text-xl font-bold tracking-[0.25em]">
+            {friend?.friend_code ?? "········"}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            このIDは登録時に自動で割り当てられ、本人でも変更できません。表示名が同じ相手でも、このIDが合っていれば本人です。
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-1 px-6">
         {blocked && (
           <p className="rounded-2xl bg-muted px-4 py-3 text-center text-xs text-muted-foreground">
