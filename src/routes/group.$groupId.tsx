@@ -241,6 +241,11 @@ function GroupChatPage() {
                 {!mine && (
                   <p className="mb-0.5 text-[11px] text-foreground/60">
                     {sender?.display_name ?? "メンバー"}
+                    {sender && (
+                      <span className="ml-1 font-mono text-[9px] text-foreground/40">
+                        ID:{sender.friend_code}
+                      </span>
+                    )}
                   </p>
                 )}
                 <div
