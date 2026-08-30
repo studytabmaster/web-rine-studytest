@@ -369,6 +369,7 @@ function GroupSettingsDialog({
   };
 
   const removeMember = async (id: string) => {
+    if (!isOwner || id === group?.owner_id) return;
     const { error } = await supabase
       .from("group_members")
       .delete()
