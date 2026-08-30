@@ -341,6 +341,7 @@ function GroupSettingsDialog({
   }, [open, user]);
 
   const rename = async () => {
+    if (!isOwner) return;
     const trimmed = name.trim();
     if (!trimmed) return;
     const { data, error } = await supabase
