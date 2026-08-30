@@ -1,12 +1,13 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { MessageCircle, Users, UserRound } from "lucide-react";
+import { MessageCircle, Users, UsersRound, UserRound } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { to: "/", label: "トーク", icon: MessageCircle },
   { to: "/friends", label: "友だち", icon: Users },
+  { to: "/groups", label: "グループ", icon: UsersRound },
   { to: "/profile", label: "プロフィール", icon: UserRound },
 ] as const;
 
