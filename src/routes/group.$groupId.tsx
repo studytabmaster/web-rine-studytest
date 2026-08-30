@@ -304,6 +304,7 @@ function GroupSettingsDialog({
   isOwner,
   onChanged,
   onLeave,
+  onDeleteGroup,
 }: {
   groupId: string;
   group: Group | null;
@@ -311,6 +312,7 @@ function GroupSettingsDialog({
   isOwner: boolean;
   onChanged: (g?: Group) => void;
   onLeave: () => void;
+  onDeleteGroup: () => void;
 }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -467,10 +469,17 @@ function GroupSettingsDialog({
           )}
         </div>
 
-        <Button variant="ghost" className="w-full text-destructive" onClick={onLeave}>
-          <LogOut className="mr-1 size-4" />
-          グループを退出
-        </Button>
+        {isOwner ? (
+          <Button variant="ghost" className="w-full text-destructive" onClick={onDeleteGroup}>
+            <Trash2 className="mr-1 size-4" />
+            グループを削除（作成者のみ）
+          </Button>
+        ) : (
+          <Button variant="ghost" className="w-full text-destructive" onClick={onLeave}>
+            <LogOut className="mr-1 size-4" />
+            グループを退出
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   );
