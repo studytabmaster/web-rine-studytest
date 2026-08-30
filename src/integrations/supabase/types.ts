@@ -239,28 +239,69 @@ export type Database = {
       }
       reports: {
         Row: {
+          context: string
           created_at: string
           detail: string
+          group_id: string | null
           id: string
           reason: string
+          reported_code: string | null
           reported_id: string
           reporter_id: string
+          status: string
+        }
+        Insert: {
+          context?: string
+          created_at?: string
+          detail?: string
+          group_id?: string | null
+          id?: string
+          reason: string
+          reported_code?: string | null
+          reported_id: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          detail?: string
+          group_id?: string | null
+          id?: string
+          reason?: string
+          reported_code?: string | null
+          reported_id?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
         }
         Insert: {
           created_at?: string
-          detail?: string
           id?: string
-          reason: string
-          reported_id: string
-          reporter_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
         }
         Update: {
           created_at?: string
-          detail?: string
           id?: string
-          reason?: string
-          reported_id?: string
-          reporter_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -288,6 +329,13 @@ export type Database = {
         }
       }
       generate_friend_code: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
@@ -299,7 +347,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -426,6 +474,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
