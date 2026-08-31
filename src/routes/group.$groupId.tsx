@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ImagePlus, LogOut, Send, Settings, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft, ImagePlus, LogOut, Send, Settings, Trash2, Undo2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
-import { ChatImage } from "@/components/ChatImage";
+import { ChatMedia } from "@/components/ChatMedia";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +24,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  UNSENT_TEXT,
   formatTime,
   initials,
+  inspectAttachment,
   type Group,
   type GroupMessage,
+  type GroupRead,
   type Profile,
 } from "@/lib/rine";
 import { cn } from "@/lib/utils";
@@ -51,6 +60,7 @@ function GroupChatPage() {
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
+  const [reads, setReads] = useState<GroupRead[]>([]);
   const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -103,10 +113,18 @@ function GroupChatPage() {
           if (m.sender_id !== user?.id) {
             const sender = members.find((p) => p.id === m.sender_id);
             sendNotification(`${group?.name || "グループ"} - ${sender?.display_name || "メンバー"}`, {
-              body: m.image_url ? "[画像]" : m.content,
+              body: m.image_url ? (m.media_type === "video" ? "[動画]" : "[画像]") : m.content,
               tag: `group-${groupId}`,
             });
           }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "group_messages", filter: `group_id=eq.${groupId}` },
+        (payload) => {
+          const m = payload.new as GroupMessage;
+          setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m } : x)));
         },
       )
       .subscribe();
@@ -116,6 +134,51 @@ function GroupChatPage() {
       void supabase.removeChannel(channel);
     };
   }, [user, groupId, loadMembers]);
+
+  // 自分の既読位置を更新し、メンバーの既読状況を取得する
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    const sync = async () => {
+      await supabase
+        .from("group_reads")
+        .upsert(
+          { group_id: groupId, user_id: user.id, last_read_at: new Date().toISOString() },
+          { onConflict: "group_id,user_id" },
+        );
+      const { data } = await supabase
+        .from("group_reads")
+        .select("id, group_id, user_id, last_read_at")
+        .eq("group_id", groupId);
+      if (!cancelled) setReads((data ?? []) as GroupRead[]);
+    };
+
+    void sync();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, groupId, messages.length]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`group-reads-${groupId}-${crypto.randomUUID()}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "group_reads", filter: `group_id=eq.${groupId}` },
+        (payload) => {
+          const r = payload.new as GroupRead;
+          if (!r?.id) return;
+          setReads((prev) =>
+            prev.some((x) => x.id === r.id) ? prev.map((x) => (x.id === r.id ? r : x)) : [...prev, r],
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [groupId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -135,34 +198,54 @@ function GroupChatPage() {
     }
   };
 
-  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pickMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !user) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("画像ファイルを選んでください");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("画像は10MBまでです");
+    const check = inspectAttachment(file);
+    if (!check.ok) {
+      toast.error(check.message);
       return;
     }
     setUploading(true);
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = file.name.split(".").pop() || (check.mediaType === "video" ? "mp4" : "jpg");
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("chat-images")
       .upload(path, file, { contentType: file.type });
     if (upErr) {
       setUploading(false);
-      toast.error("画像をアップロードできませんでした");
+      toast.error("アップロードできませんでした");
       return;
     }
+    const { error } = await supabase.from("group_messages").insert({
+      group_id: groupId,
+      sender_id: user.id,
+      content: "",
+      image_url: path,
+      media_type: check.mediaType,
+    });
+    setUploading(false);
+    if (error) toast.error("送信できませんでした");
+  };
+
+  const unsend = async (id: string) => {
     const { error } = await supabase
       .from("group_messages")
-      .insert({ group_id: groupId, sender_id: user.id, content: "", image_url: path });
-    setUploading(false);
-    if (error) toast.error("画像を送信できませんでした");
+      .update({ deleted_at: new Date().toISOString(), content: "", image_url: null })
+      .eq("id", id);
+    if (error) {
+      toast.error("取り消せませんでした");
+      return;
+    }
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? { ...m, deleted_at: new Date().toISOString(), content: "", image_url: null }
+          : m,
+      ),
+    );
+    toast.success("送信を取り消しました");
   };
 
   const leave = async () => {
@@ -235,7 +318,36 @@ function GroupChatPage() {
         )}
         {messages.map((m) => {
           const mine = m.sender_id === user?.id;
+          const unsent = !!m.deleted_at;
           const sender = members.find((p) => p.id === m.sender_id);
+          const readCount = reads.filter(
+            (r) => r.user_id !== m.sender_id && new Date(r.last_read_at) >= new Date(m.created_at),
+          ).length;
+          const bubble = (
+            <div
+              className={cn(
+                "shadow-soft",
+                m.image_url && !unsent
+                  ? "overflow-hidden rounded-2xl"
+                  : cn(
+                      "rounded-2xl px-3.5 py-2 text-sm",
+                      unsent
+                        ? "border border-dashed border-foreground/20 bg-background/60 italic text-foreground/50"
+                        : mine
+                          ? "bubble-out rounded-br-sm"
+                          : "bubble-in rounded-bl-sm",
+                    ),
+              )}
+            >
+              {unsent ? (
+                <p>{UNSENT_TEXT}</p>
+              ) : m.image_url ? (
+                <ChatMedia path={m.image_url} mediaType={m.media_type} />
+              ) : (
+                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+              )}
+            </div>
+          );
           return (
             <div key={m.id} className={cn("flex items-end gap-1.5", mine && "flex-row-reverse")}>
               {!mine && (
@@ -257,25 +369,35 @@ function GroupChatPage() {
                     )}
                   </p>
                 )}
-                <div
-                  className={cn(
-                    "shadow-soft",
-                    m.image_url
-                      ? "overflow-hidden rounded-2xl"
-                      : cn(
-                          "rounded-2xl px-3.5 py-2 text-sm",
-                          mine ? "bubble-out rounded-br-sm" : "bubble-in rounded-bl-sm",
-                        ),
-                  )}
-                >
-                  {m.image_url ? (
-                    <ChatImage path={m.image_url} />
-                  ) : (
-                    <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  )}
-                </div>
+                {mine && !unsent ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" className="w-full text-left">
+                        {bubble}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => void unsend(m.id)}>
+                        <Undo2 className="mr-2 size-4" />
+                        送信を取り消す
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  bubble
+                )}
               </div>
-              <span className="mb-1 text-[10px] text-foreground/50">{formatTime(m.created_at)}</span>
+              <span
+                className={cn(
+                  "mb-1 flex flex-col text-[10px] text-foreground/50",
+                  mine ? "items-end" : "items-start",
+                )}
+              >
+                {mine && !unsent && readCount > 0 && (
+                  <span className="text-foreground/60">既読 {readCount}</span>
+                )}
+                {formatTime(m.created_at)}
+              </span>
             </div>
           );
         })}
@@ -286,12 +408,12 @@ function GroupChatPage() {
         onSubmit={send}
         className="flex items-center gap-2 border-t border-border bg-background/95 px-3 py-3 backdrop-blur"
       >
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickImage} />
+        <input ref={fileRef} type="file" accept="image/*,video/*" hidden onChange={pickMedia} />
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="画像を送信"
+          aria-label="画像・動画を送信"
           disabled={uploading}
           onClick={() => fileRef.current?.click()}
         >

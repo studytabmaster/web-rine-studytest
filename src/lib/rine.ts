@@ -14,7 +14,9 @@ export type Message = {
   receiver_id: string;
   content: string;
   image_url: string | null;
+  media_type: string;
   read_at: string | null;
+  deleted_at: string | null;
   created_at: string;
 };
 
@@ -76,5 +78,34 @@ export type GroupMessage = {
   sender_id: string;
   content: string;
   image_url: string | null;
+  media_type: string;
+  deleted_at: string | null;
   created_at: string;
 };
+
+export type GroupRead = {
+  id: string;
+  group_id: string;
+  user_id: string;
+  last_read_at: string;
+};
+
+export const UNSENT_TEXT = "メッセージの送信を取り消しました";
+
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
+/** 添付ファイルを検証して種別を返す */
+export function inspectAttachment(file: File):
+  | { ok: true; mediaType: "image" | "video" }
+  | { ok: false; message: string } {
+  if (file.type.startsWith("image/")) {
+    if (file.size > MAX_IMAGE_BYTES) return { ok: false, message: "画像は10MBまでです" };
+    return { ok: true, mediaType: "image" };
+  }
+  if (file.type.startsWith("video/")) {
+    if (file.size > MAX_VIDEO_BYTES) return { ok: false, message: "動画は50MBまでです" };
+    return { ok: true, mediaType: "video" };
+  }
+  return { ok: false, message: "画像または動画を選んでください" };
+}

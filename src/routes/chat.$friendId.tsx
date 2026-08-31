@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Ban, Flag, ImagePlus, MoreVertical, Phone, Send, Video } from "lucide-react";
+import { ArrowLeft, Ban, Flag, ImagePlus, MoreVertical, Phone, Send, Undo2, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,11 +14,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChatImage } from "@/components/ChatImage";
+import { ChatMedia } from "@/components/ChatMedia";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatTime, initials, type Message, type Profile } from "@/lib/rine";
+import {
+  UNSENT_TEXT,
+  formatTime,
+  initials,
+  inspectAttachment,
+  type Message,
+  type Profile,
+} from "@/lib/rine";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/chat/$friendId")({
@@ -86,7 +93,7 @@ function ChatPage() {
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
           if (m.sender_id === friendId) {
             sendNotification(friend?.display_name || "新着メッセージ", {
-              body: m.image_url ? "[画像]" : m.content,
+              body: m.image_url ? (m.media_type === "video" ? "[動画]" : "[画像]") : m.content,
               tag: `chat-${friendId}`,
             });
           }
@@ -144,7 +151,7 @@ function ChatPage() {
     }
   };
 
-  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pickMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !user) return;
@@ -152,32 +159,51 @@ function ChatPage() {
       toast.error("ブロック中の相手には送信できません");
       return;
     }
-    if (!file.type.startsWith("image/")) {
-      toast.error("画像ファイルを選んでください");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("画像は10MBまでです");
+    const check = inspectAttachment(file);
+    if (!check.ok) {
+      toast.error(check.message);
       return;
     }
     setUploading(true);
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = file.name.split(".").pop() || (check.mediaType === "video" ? "mp4" : "jpg");
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("chat-images")
       .upload(path, file, { contentType: file.type });
     if (upErr) {
       setUploading(false);
-      toast.error("画像をアップロードできませんでした");
+      toast.error("アップロードできませんでした");
       return;
     }
-    const { error } = await supabase
-      .from("messages")
-      .insert({ sender_id: user.id, receiver_id: friendId, content: "", image_url: path });
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user.id,
+      receiver_id: friendId,
+      content: "",
+      image_url: path,
+      media_type: check.mediaType,
+    });
     setUploading(false);
-    if (error) toast.error("画像を送信できませんでした");
+    if (error) toast.error("送信できませんでした");
   };
 
+  const unsend = async (id: string) => {
+    const { error } = await supabase
+      .from("messages")
+      .update({ deleted_at: new Date().toISOString(), content: "", image_url: null })
+      .eq("id", id);
+    if (error) {
+      toast.error("取り消せませんでした");
+      return;
+    }
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? { ...m, deleted_at: new Date().toISOString(), content: "", image_url: null }
+          : m,
+      ),
+    );
+    toast.success("送信を取り消しました");
+  };
 
   if (loading) return null;
 
@@ -270,32 +296,61 @@ function ChatPage() {
         )}
         {messages.map((m) => {
           const mine = m.sender_id === user?.id;
+          const unsent = !!m.deleted_at;
+          const bubble = (
+            <div
+              className={cn(
+                "max-w-[72%] shadow-soft",
+                m.image_url && !unsent
+                  ? "overflow-hidden rounded-2xl"
+                  : cn(
+                      "rounded-2xl px-3.5 py-2 text-sm",
+                      unsent
+                        ? "border border-dashed border-foreground/20 bg-background/60 italic text-foreground/50"
+                        : mine
+                          ? "bubble-out rounded-br-sm"
+                          : "bubble-in rounded-bl-sm",
+                    ),
+              )}
+            >
+              {unsent ? (
+                <p>{UNSENT_TEXT}</p>
+              ) : m.image_url ? (
+                <ChatMedia path={m.image_url} mediaType={m.media_type} />
+              ) : (
+                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+              )}
+            </div>
+          );
+
           return (
             <div key={m.id} className={cn("flex items-end gap-1", mine && "flex-row-reverse")}>
-              <div
-                className={cn(
-                  "max-w-[72%] shadow-soft",
-                  m.image_url
-                    ? "overflow-hidden rounded-2xl"
-                    : cn(
-                        "rounded-2xl px-3.5 py-2 text-sm",
-                        mine ? "bubble-out rounded-br-sm" : "bubble-in rounded-bl-sm",
-                      ),
-                )}
-              >
-                {m.image_url ? (
-                  <ChatImage path={m.image_url} />
-                ) : (
-                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                )}
-              </div>
+              {mine && !unsent ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button" className="max-w-[72%] text-left">
+                      {bubble}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => void unsend(m.id)}>
+                      <Undo2 className="mr-2 size-4" />
+                      送信を取り消す
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                bubble
+              )}
               <span
                 className={cn(
                   "flex flex-col pb-1 text-[10px] text-foreground/50",
                   mine ? "items-end" : "items-start",
                 )}
               >
-                {mine && m.read_at && <span className="text-foreground/60">既読</span>}
+                {mine && !unsent && (
+                  <span className="text-foreground/60">{m.read_at ? "既読" : "未読"}</span>
+                )}
                 {formatTime(m.created_at)}
               </span>
             </div>
@@ -325,16 +380,16 @@ function ChatPage() {
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           className="hidden"
-          onChange={pickImage}
+          onChange={pickMedia}
         />
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="rounded-full"
-          aria-label="画像を送る"
+          aria-label="画像・動画を送る"
           disabled={uploading}
           onClick={() => fileRef.current?.click()}
         >
