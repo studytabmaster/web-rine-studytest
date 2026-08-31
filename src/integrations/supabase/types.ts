@@ -119,6 +119,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          deleted_at: string | null
           group_id: string
           id: string
           image_url: string | null
@@ -128,6 +129,7 @@ export type Database = {
         Insert: {
           content?: string
           created_at?: string
+          deleted_at?: string | null
           group_id: string
           id?: string
           image_url?: string | null
@@ -137,6 +139,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          deleted_at?: string | null
           group_id?: string
           id?: string
           image_url?: string | null
@@ -219,6 +222,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          deleted_at: string | null
           id: string
           image_url: string | null
           media_type: string
@@ -229,6 +233,7 @@ export type Database = {
         Insert: {
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           image_url?: string | null
           media_type?: string
@@ -239,6 +244,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           image_url?: string | null
           media_type?: string
@@ -365,6 +371,23 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_group: {
+        Args: { _name: string }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "groups"
           isOneToOne: true
           isSetofReturn: false
         }
