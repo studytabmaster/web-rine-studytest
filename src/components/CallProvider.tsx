@@ -9,6 +9,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import type { CallSignal, Profile } from "@/lib/rine";
 import { CallOverlay } from "@/components/CallOverlay";
 import { toast } from "sonner";
