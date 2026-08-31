@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "@/components/CallProvider";
 import { useBlocks } from "@/hooks/useBlocks";
+import { useNotifications } from "@/hooks/useNotifications";
 import { ReportDialog } from "@/components/ReportDialog";
 import {
   DropdownMenu,
