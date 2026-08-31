@@ -4,6 +4,7 @@ import { ArrowLeft, ImagePlus, LogOut, Send, Settings, Trash2, UserPlus } from "
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import { ChatImage } from "@/components/ChatImage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
