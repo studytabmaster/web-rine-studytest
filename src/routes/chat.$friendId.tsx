@@ -84,6 +84,12 @@ function ChatPage() {
             (m.sender_id === friendId && m.receiver_id === user.id);
           if (!mine) return;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+          if (m.sender_id === friendId) {
+            sendNotification(friend?.display_name || "新着メッセージ", {
+              body: m.image_url ? "[画像]" : m.content,
+              tag: `chat-${friendId}`,
+            });
+          }
         },
       )
       .on(
