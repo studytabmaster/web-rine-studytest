@@ -84,7 +84,7 @@ function ChatPage() {
     void load();
 
     const channel = supabase
-      .channel(`chat-${friendId}`)
+      .channel(`chat-${friendId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
@@ -96,13 +96,14 @@ function ChatPage() {
           if (!mine) return;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
           if (m.sender_id === friendId) {
-            sendNotification(friend?.display_name || "新着メッセージ", {
+            sendNotification(friendRef.current?.display_name || "新着メッセージ", {
               body: m.image_url ? (m.media_type === "video" ? "[動画]" : "[画像]") : m.content,
               tag: `chat-${friendId}`,
             });
           }
         },
       )
+
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "messages" },
