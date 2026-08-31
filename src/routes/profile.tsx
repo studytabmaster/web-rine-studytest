@@ -144,6 +144,16 @@ function ProfilePage() {
           </Button>
         </div>
 
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => void requestPermission()}
+          disabled={notificationDisabled}
+        >
+          <Bell className="mr-1 size-4" />
+          {notificationLabel}
+        </Button>
+
         <Button variant="ghost" className="w-full text-destructive" onClick={() => void signOut()}>
           <LogOut className="mr-1 size-4" />
           ログアウト
