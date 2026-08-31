@@ -46,6 +46,7 @@ const ICE_SERVERS: RTCConfiguration = {
 
 export function CallProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { sendNotification } = useNotifications();
   const [status, setStatus] = useState<CallStatus>("idle");
   const [peer, setPeer] = useState<Profile | null>(null);
   const [video, setVideo] = useState(false);
