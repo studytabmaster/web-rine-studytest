@@ -212,7 +212,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
               .select("*")
               .eq("id", signal.from_user)
               .maybeSingle();
-            setPeer((data as Profile) ?? null);
+            const caller = (data as Profile) ?? null;
+            setPeer(caller);
+            sendNotification(caller?.display_name || "着信", {
+              body: signal.video ? "ビデオ通話の着信があります" : "音声通話の着信があります",
+              tag: `call-${signal.from_user}`,
+              requireInteraction: true,
+            });
             return;
           }
 
