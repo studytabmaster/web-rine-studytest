@@ -41,6 +41,7 @@ function ChatPage() {
   const { user, loading } = useAuth();
   const { startCall } = useCall();
   const { isBlocked, block, unblock } = useBlocks();
+  const { sendNotification } = useNotifications();
   const blocked = isBlocked(friendId);
   const [friend, setFriend] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
