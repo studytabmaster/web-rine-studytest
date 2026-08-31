@@ -56,6 +56,10 @@ function ChatPage() {
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const friendRef = useRef<Profile | null>(null);
+  const markedRef = useRef<Set<string>>(new Set());
+  friendRef.current = friend;
+
 
   useEffect(() => {
     if (!user) return;
@@ -80,7 +84,7 @@ function ChatPage() {
     void load();
 
     const channel = supabase
-      .channel(`chat-${friendId}`)
+      .channel(`chat-${friendId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
@@ -92,13 +96,14 @@ function ChatPage() {
           if (!mine) return;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
           if (m.sender_id === friendId) {
-            sendNotification(friend?.display_name || "新着メッセージ", {
+            sendNotification(friendRef.current?.display_name || "新着メッセージ", {
               body: m.image_url ? (m.media_type === "video" ? "[動画]" : "[画像]") : m.content,
               tag: `chat-${friendId}`,
             });
           }
         },
       )
+
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "messages" },
@@ -115,19 +120,31 @@ function ChatPage() {
     };
   }, [user, friendId]);
 
-  // 受信したメッセージを既読にする
+  // 受信したメッセージを既読にする（同じIDは一度だけ更新する）
   useEffect(() => {
     if (!user) return;
-    const unread = messages.filter((m) => m.receiver_id === user.id && !m.read_at);
+    const unread = messages.filter(
+      (m) => m.receiver_id === user.id && !m.read_at && !markedRef.current.has(m.id),
+    );
     if (unread.length === 0) return;
+    const ids = unread.map((m) => m.id);
+    ids.forEach((id) => markedRef.current.add(id));
+    const now = new Date().toISOString();
     void supabase
       .from("messages")
-      .update({ read_at: new Date().toISOString() })
-      .in(
-        "id",
-        unread.map((m) => m.id),
-      );
+      .update({ read_at: now })
+      .in("id", ids)
+      .then(({ error }) => {
+        if (error) {
+          ids.forEach((id) => markedRef.current.delete(id));
+          return;
+        }
+        setMessages((prev) =>
+          prev.map((m) => (ids.includes(m.id) ? { ...m, read_at: m.read_at ?? now } : m)),
+        );
+      });
   }, [messages, user]);
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

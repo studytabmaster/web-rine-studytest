@@ -65,7 +65,12 @@ function GroupChatPage() {
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const membersRef = useRef<Profile[]>([]);
+  const groupRef = useRef<Group | null>(null);
+  membersRef.current = members;
+  groupRef.current = group;
   const isOwner = !!user && group?.owner_id === user.id;
+
 
   const loadMembers = useCallback(async () => {
     const { data: rows } = await supabase
@@ -111,12 +116,16 @@ function GroupChatPage() {
           const m = payload.new as GroupMessage;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
           if (m.sender_id !== user?.id) {
-            const sender = members.find((p) => p.id === m.sender_id);
-            sendNotification(`${group?.name || "グループ"} - ${sender?.display_name || "メンバー"}`, {
-              body: m.image_url ? (m.media_type === "video" ? "[動画]" : "[画像]") : m.content,
-              tag: `group-${groupId}`,
-            });
+            const sender = membersRef.current.find((p) => p.id === m.sender_id);
+            sendNotification(
+              `${groupRef.current?.name || "グループ"} - ${sender?.display_name || "メンバー"}`,
+              {
+                body: m.image_url ? (m.media_type === "video" ? "[動画]" : "[画像]") : m.content,
+                tag: `group-${groupId}`,
+              },
+            );
           }
+
         },
       )
       .on(

@@ -118,7 +118,7 @@ function TalksPage() {
   const empty = !loading && visible.length === 0;
   const totalUnread = visible.reduce((sum, r) => sum + r.unread, 0);
 
-  const setThreadRead = async (friendId: string, read: boolean) => {
+  const setThreadRead = async (friendId: string, read: boolean, quiet = false) => {
     if (!user) return;
     let error = null;
     if (read) {
@@ -167,7 +167,7 @@ function TalksPage() {
           : r,
       ),
     );
-    toast.success(read ? "既読にしました" : "未読にしました");
+    if (!quiet) toast.success(read ? "既読にしました" : "未読にしました");
   };
 
   return (
@@ -181,8 +181,9 @@ function TalksPage() {
             className="text-xs"
             onClick={async () => {
               for (const r of visible.filter((x) => x.unread > 0)) {
-                await setThreadRead(r.friend.id, true);
+                await setThreadRead(r.friend.id, true, true);
               }
+              toast.success("すべて既読にしました");
             }}
           >
             <MailOpen className="mr-1 size-4" />
