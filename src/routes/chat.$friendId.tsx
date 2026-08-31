@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "@/components/CallProvider";
 import { useBlocks } from "@/hooks/useBlocks";
+import { useNotifications } from "@/hooks/useNotifications";
 import { ReportDialog } from "@/components/ReportDialog";
 import {
   DropdownMenu,
@@ -40,6 +41,7 @@ function ChatPage() {
   const { user, loading } = useAuth();
   const { startCall } = useCall();
   const { isBlocked, block, unblock } = useBlocks();
+  const { sendNotification } = useNotifications();
   const blocked = isBlocked(friendId);
   const [friend, setFriend] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -82,6 +84,12 @@ function ChatPage() {
             (m.sender_id === friendId && m.receiver_id === user.id);
           if (!mine) return;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+          if (m.sender_id === friendId) {
+            sendNotification(friend?.display_name || "新着メッセージ", {
+              body: m.image_url ? "[画像]" : m.content,
+              tag: `chat-${friendId}`,
+            });
+          }
         },
       )
       .on(

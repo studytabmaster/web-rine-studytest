@@ -9,6 +9,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import type { CallSignal, Profile } from "@/lib/rine";
 import { CallOverlay } from "@/components/CallOverlay";
 import { toast } from "sonner";
@@ -45,6 +46,7 @@ const ICE_SERVERS: RTCConfiguration = {
 
 export function CallProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { sendNotification } = useNotifications();
   const [status, setStatus] = useState<CallStatus>("idle");
   const [peer, setPeer] = useState<Profile | null>(null);
   const [video, setVideo] = useState(false);
@@ -210,7 +212,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
               .select("*")
               .eq("id", signal.from_user)
               .maybeSingle();
-            setPeer((data as Profile) ?? null);
+            const caller = (data as Profile) ?? null;
+            setPeer(caller);
+            sendNotification(caller?.display_name || "着信", {
+              body: signal.video ? "ビデオ通話の着信があります" : "音声通話の着信があります",
+              tag: `call-${signal.from_user}`,
+              requireInteraction: true,
+            });
             return;
           }
 

@@ -4,6 +4,7 @@ import { ArrowLeft, ImagePlus, LogOut, Send, Settings, Trash2, UserPlus } from "
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import { ChatImage } from "@/components/ChatImage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ function GroupChatPage() {
   const { groupId } = Route.useParams();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { sendNotification } = useNotifications();
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
@@ -98,6 +100,13 @@ function GroupChatPage() {
         (payload) => {
           const m = payload.new as GroupMessage;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+          if (m.sender_id !== user?.id) {
+            const sender = members.find((p) => p.id === m.sender_id);
+            sendNotification(`${group?.name || "グループ"} - ${sender?.display_name || "メンバー"}`, {
+              body: m.image_url ? "[画像]" : m.content,
+              tag: `group-${groupId}`,
+            });
+          }
         },
       )
       .subscribe();

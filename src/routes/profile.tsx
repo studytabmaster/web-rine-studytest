@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, LogOut } from "lucide-react";
+import { Bell, Copy, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import { AppShell } from "@/components/AppShell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,10 +31,19 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const { profile, refreshProfile, signOut, user } = useAuth();
+  const { permission, requestPermission } = useNotifications();
   const [displayName, setDisplayName] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const notificationLabel =
+    permission === "granted"
+      ? "通知 ON"
+      : permission === "denied"
+        ? "通知が拒否されています"
+        : "通知を許可";
+  const notificationDisabled = permission === "granted" || permission === "denied" || permission === "unsupported";
 
   useEffect(() => {
     if (!profile) return;
@@ -133,6 +143,16 @@ function ProfilePage() {
             保存する
           </Button>
         </div>
+
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => void requestPermission()}
+          disabled={notificationDisabled}
+        >
+          <Bell className="mr-1 size-4" />
+          {notificationLabel}
+        </Button>
 
         <Button variant="ghost" className="w-full text-destructive" onClick={() => void signOut()}>
           <LogOut className="mr-1 size-4" />
