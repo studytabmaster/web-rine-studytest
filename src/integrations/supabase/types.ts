@@ -122,6 +122,7 @@ export type Database = {
           group_id: string
           id: string
           image_url: string | null
+          media_type: string
           sender_id: string
         }
         Insert: {
@@ -130,6 +131,7 @@ export type Database = {
           group_id: string
           id?: string
           image_url?: string | null
+          media_type?: string
           sender_id: string
         }
         Update: {
@@ -138,11 +140,47 @@ export type Database = {
           group_id?: string
           id?: string
           image_url?: string | null
+          media_type?: string
           sender_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_reads: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          last_read_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          last_read_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          last_read_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_reads_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
@@ -183,6 +221,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          media_type: string
           read_at: string | null
           receiver_id: string
           sender_id: string
@@ -192,6 +231,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          media_type?: string
           read_at?: string | null
           receiver_id: string
           sender_id: string
@@ -201,6 +241,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          media_type?: string
           read_at?: string | null
           receiver_id?: string
           sender_id?: string
