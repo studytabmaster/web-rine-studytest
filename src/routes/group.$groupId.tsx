@@ -65,7 +65,12 @@ function GroupChatPage() {
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const membersRef = useRef<Profile[]>([]);
+  const groupRef = useRef<Group | null>(null);
+  membersRef.current = members;
+  groupRef.current = group;
   const isOwner = !!user && group?.owner_id === user.id;
+
 
   const loadMembers = useCallback(async () => {
     const { data: rows } = await supabase
