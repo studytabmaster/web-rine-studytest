@@ -318,7 +318,36 @@ function GroupChatPage() {
         )}
         {messages.map((m) => {
           const mine = m.sender_id === user?.id;
+          const unsent = !!m.deleted_at;
           const sender = members.find((p) => p.id === m.sender_id);
+          const readCount = reads.filter(
+            (r) => r.user_id !== m.sender_id && new Date(r.last_read_at) >= new Date(m.created_at),
+          ).length;
+          const bubble = (
+            <div
+              className={cn(
+                "shadow-soft",
+                m.image_url && !unsent
+                  ? "overflow-hidden rounded-2xl"
+                  : cn(
+                      "rounded-2xl px-3.5 py-2 text-sm",
+                      unsent
+                        ? "border border-dashed border-foreground/20 bg-background/60 italic text-foreground/50"
+                        : mine
+                          ? "bubble-out rounded-br-sm"
+                          : "bubble-in rounded-bl-sm",
+                    ),
+              )}
+            >
+              {unsent ? (
+                <p>{UNSENT_TEXT}</p>
+              ) : m.image_url ? (
+                <ChatMedia path={m.image_url} mediaType={m.media_type} />
+              ) : (
+                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+              )}
+            </div>
+          );
           return (
             <div key={m.id} className={cn("flex items-end gap-1.5", mine && "flex-row-reverse")}>
               {!mine && (
@@ -340,25 +369,35 @@ function GroupChatPage() {
                     )}
                   </p>
                 )}
-                <div
-                  className={cn(
-                    "shadow-soft",
-                    m.image_url
-                      ? "overflow-hidden rounded-2xl"
-                      : cn(
-                          "rounded-2xl px-3.5 py-2 text-sm",
-                          mine ? "bubble-out rounded-br-sm" : "bubble-in rounded-bl-sm",
-                        ),
-                  )}
-                >
-                  {m.image_url ? (
-                    <ChatImage path={m.image_url} />
-                  ) : (
-                    <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  )}
-                </div>
+                {mine && !unsent ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" className="w-full text-left">
+                        {bubble}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => void unsend(m.id)}>
+                        <Undo2 className="mr-2 size-4" />
+                        送信を取り消す
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  bubble
+                )}
               </div>
-              <span className="mb-1 text-[10px] text-foreground/50">{formatTime(m.created_at)}</span>
+              <span
+                className={cn(
+                  "mb-1 flex flex-col text-[10px] text-foreground/50",
+                  mine ? "items-end" : "items-start",
+                )}
+              >
+                {mine && !unsent && readCount > 0 && (
+                  <span className="text-foreground/60">既読 {readCount}</span>
+                )}
+                {formatTime(m.created_at)}
+              </span>
             </div>
           );
         })}
