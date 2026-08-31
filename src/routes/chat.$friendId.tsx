@@ -120,19 +120,31 @@ function ChatPage() {
     };
   }, [user, friendId]);
 
-  // 受信したメッセージを既読にする
+  // 受信したメッセージを既読にする（同じIDは一度だけ更新する）
   useEffect(() => {
     if (!user) return;
-    const unread = messages.filter((m) => m.receiver_id === user.id && !m.read_at);
+    const unread = messages.filter(
+      (m) => m.receiver_id === user.id && !m.read_at && !markedRef.current.has(m.id),
+    );
     if (unread.length === 0) return;
+    const ids = unread.map((m) => m.id);
+    ids.forEach((id) => markedRef.current.add(id));
+    const now = new Date().toISOString();
     void supabase
       .from("messages")
-      .update({ read_at: new Date().toISOString() })
-      .in(
-        "id",
-        unread.map((m) => m.id),
-      );
+      .update({ read_at: now })
+      .in("id", ids)
+      .then(({ error }) => {
+        if (error) {
+          ids.forEach((id) => markedRef.current.delete(id));
+          return;
+        }
+        setMessages((prev) =>
+          prev.map((m) => (ids.includes(m.id) ? { ...m, read_at: m.read_at ?? now } : m)),
+        );
+      });
   }, [messages, user]);
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
