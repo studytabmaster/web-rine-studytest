@@ -118,7 +118,7 @@ function TalksPage() {
   const empty = !loading && visible.length === 0;
   const totalUnread = visible.reduce((sum, r) => sum + r.unread, 0);
 
-  const setThreadRead = async (friendId: string, read: boolean) => {
+  const setThreadRead = async (friendId: string, read: boolean, quiet = false) => {
     if (!user) return;
     let error = null;
     if (read) {
