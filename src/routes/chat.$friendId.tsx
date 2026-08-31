@@ -56,6 +56,10 @@ function ChatPage() {
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const friendRef = useRef<Profile | null>(null);
+  const markedRef = useRef<Set<string>>(new Set());
+  friendRef.current = friend;
+
 
   useEffect(() => {
     if (!user) return;
