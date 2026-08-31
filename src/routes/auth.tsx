@@ -54,7 +54,7 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("アカウントを作成しました");
+        toast.success("アカウントを作成しました！そのまま利用できます");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -78,7 +78,7 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-brand-gradient px-6 py-12">
       <div className="w-full max-w-sm rounded-3xl bg-card p-8 shadow-soft">
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center">
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-3xl bg-brand-gradient text-3xl font-black text-primary-foreground">
             R
           </div>
@@ -87,6 +87,43 @@ function AuthPage() {
             友だちとトークも通話も、ブラウザだけで。
           </p>
         </div>
+
+        <div className="mb-5 grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
+          <button
+            type="button"
+            onClick={() => setMode("login")}
+            className={
+              "rounded-full py-2 text-sm font-semibold transition-colors " +
+              (mode === "login" ? "bg-card text-foreground shadow-soft" : "text-muted-foreground")
+            }
+          >
+            ログイン
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("signup")}
+            className={
+              "rounded-full py-2 text-sm font-semibold transition-colors " +
+              (mode === "signup" ? "bg-card text-foreground shadow-soft" : "text-muted-foreground")
+            }
+          >
+            新規登録（無料）
+          </button>
+        </div>
+
+        {mode === "signup" && (
+          <div className="mb-5 rounded-2xl bg-muted/60 p-4 text-xs leading-relaxed text-muted-foreground">
+            <p className="mb-1 font-semibold text-foreground">アカウントの作り方（30秒）</p>
+            <ol className="list-inside list-decimal space-y-0.5">
+              <li>表示名（あとで変更できます）を入力</li>
+              <li>メールアドレスとパスワード（6文字以上）を入力</li>
+              <li>「新規登録する」を押すだけ。メール確認は不要です</li>
+            </ol>
+            <p className="mt-2">
+              登録すると、なりすまし防止用の8桁の識別IDが自動で割り当てられます。
+            </p>
+          </div>
+        )}
 
         <form onSubmit={submit} className="space-y-4">
           {mode === "signup" && (
@@ -124,7 +161,7 @@ function AuthPage() {
             />
           </div>
           <Button type="submit" variant="brand" size="pill" className="w-full" disabled={busy}>
-            {mode === "login" ? "ログイン" : "新規登録"}
+            {busy ? "処理中..." : mode === "login" ? "ログイン" : "新規登録する"}
           </Button>
         </form>
 
@@ -135,7 +172,7 @@ function AuthPage() {
         </div>
 
         <Button variant="outline" size="pill" className="w-full" onClick={google}>
-          Google でログイン
+          Google で{mode === "signup" ? "登録" : "ログイン"}（メール不要）
         </Button>
 
         <button
@@ -143,7 +180,9 @@ function AuthPage() {
           onClick={() => setMode(mode === "login" ? "signup" : "login")}
           className="mt-6 w-full text-center text-sm text-muted-foreground hover:text-foreground"
         >
-          {mode === "login" ? "アカウントをお持ちでない方はこちら" : "すでにアカウントをお持ちの方"}
+          {mode === "login"
+            ? "アカウントをお持ちでない方は「新規登録（無料）」へ"
+            : "すでにアカウントをお持ちの方はログインへ"}
         </button>
       </div>
     </div>
