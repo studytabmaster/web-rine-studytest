@@ -15,7 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
-import { formatListTime, initials, type Message, type Profile } from "@/lib/rine";
+import {
+  UNSENT_TEXT, formatListTime, initials, type Message, type Profile } from "@/lib/rine";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -75,7 +76,7 @@ function TalksPage() {
       for (const m of (msgs ?? []) as Message[]) {
         const other = m.sender_id === user.id ? m.receiver_id : m.sender_id;
         if (!lastByFriend.has(other)) lastByFriend.set(other, m);
-        if (m.receiver_id === user.id && !m.read_at) {
+        if (m.receiver_id === user.id && !m.read_at && !m.deleted_at) {
           unreadByFriend.set(other, (unreadByFriend.get(other) ?? 0) + 1);
         }
       }
@@ -237,7 +238,15 @@ function TalksPage() {
                       )}
                     >
                       {last
-                        ? `${mineLast ? "自分: " : ""}${last.image_url ? "画像を送信しました" : last.content}`
+                        ? `${mineLast ? "自分: " : ""}${
+                            last.deleted_at
+                              ? UNSENT_TEXT
+                              : last.image_url
+                                ? last.media_type === "video"
+                                  ? "動画を送信しました"
+                                  : "画像を送信しました"
+                                : last.content
+                          }`
                         : friend.status_message || "トークを始めましょう"}
                     </p>
                   </div>
