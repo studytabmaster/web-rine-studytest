@@ -100,6 +100,13 @@ function GroupChatPage() {
         (payload) => {
           const m = payload.new as GroupMessage;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+          if (m.sender_id !== user?.id) {
+            const sender = members.find((p) => p.id === m.sender_id);
+            sendNotification(`${group?.name || "グループ"} - ${sender?.display_name || "メンバー"}`, {
+              body: m.image_url ? "[画像]" : m.content,
+              tag: `group-${groupId}`,
+            });
+          }
         },
       )
       .subscribe();
