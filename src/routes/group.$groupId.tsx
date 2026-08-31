@@ -47,6 +47,7 @@ function GroupChatPage() {
   const { groupId } = Route.useParams();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { sendNotification } = useNotifications();
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
