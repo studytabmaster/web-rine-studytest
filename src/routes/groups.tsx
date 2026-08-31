@@ -70,18 +70,12 @@ function GroupsPage() {
     const trimmed = name.trim();
     if (!trimmed || !user) return;
     setSaving(true);
-    const { data, error } = await supabase
-      .from("groups")
-      .insert({ name: trimmed, owner_id: user.id })
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc("create_group", { _name: trimmed });
+    setSaving(false);
     if (error || !data) {
-      setSaving(false);
-      toast.error("グループを作成できませんでした");
+      toast.error(error?.message || "グループを作成できませんでした");
       return;
     }
-    await supabase.from("group_members").insert({ group_id: data.id, user_id: user.id });
-    setSaving(false);
     setOpen(false);
     setName("");
     toast.success("グループを作成しました");
