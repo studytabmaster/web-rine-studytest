@@ -31,10 +31,19 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const { profile, refreshProfile, signOut, user } = useAuth();
+  const { permission, requestPermission } = useNotifications();
   const [displayName, setDisplayName] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const notificationLabel =
+    permission === "granted"
+      ? "通知 ON"
+      : permission === "denied"
+        ? "通知が拒否されています"
+        : "通知を許可";
+  const notificationDisabled = permission === "granted" || permission === "denied" || permission === "unsupported";
 
   useEffect(() => {
     if (!profile) return;
