@@ -36,6 +36,7 @@ function ProfilePage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const notificationLabel =
     permission === "granted"
@@ -70,6 +71,46 @@ function ProfilePage() {
     }
     await refreshProfile();
     toast.success("プロフィールを保存しました");
+  };
+
+  /** 画像ファイルをアップロードし、長期の署名付きURLをアイコンに設定する */
+  const uploadAvatar = async (file: File) => {
+    if (!user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("画像ファイルを選んでください");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("5MB以下の画像を選んでください");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+
+      const { data, error: signErr } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr || !data?.signedUrl) throw signErr ?? new Error("URLを作成できませんでした");
+
+      setAvatarUrl(data.signedUrl);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: data.signedUrl })
+        .eq("id", user.id);
+      if (error) throw error;
+      await refreshProfile();
+      toast.success("アイコンを更新しました");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "アップロードできませんでした");
+    } finally {
+      setUploading(false);
+    }
   };
 
 
@@ -135,7 +176,25 @@ function ProfilePage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="avatar">アイコン画像のURL</Label>
+            <Label htmlFor="avatar-file">アイコン画像をアップロード</Label>
+            <input
+              id="avatar-file"
+              type="file"
+              accept="image/*"
+              disabled={uploading}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void uploadAvatar(f);
+              }}
+              className="w-full text-xs"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {uploading ? "アップロード中..." : "JPG・PNG・GIF（5MBまで）"}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="avatar">アイコン画像のURL（任意）</Label>
             <Input
               id="avatar"
               value={avatarUrl}
