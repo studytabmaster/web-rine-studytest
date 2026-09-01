@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Copy, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -162,6 +162,15 @@ function ProfilePage() {
           <LogOut className="mr-1 size-4" />
           ログアウト
         </Button>
+
+        <div className="flex items-center justify-center gap-4 pb-2 text-xs text-muted-foreground">
+          <Link to="/terms" className="underline hover:text-foreground">
+            利用規約
+          </Link>
+          <Link to="/privacy" className="underline hover:text-foreground">
+            プライバシーポリシー
+          </Link>
+        </div>
       </div>
     </AppShell>
   );
