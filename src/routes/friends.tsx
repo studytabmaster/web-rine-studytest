@@ -62,6 +62,16 @@ function FriendsPage() {
 
   useEffect(() => {
     void load();
+    if (!user) return;
+    const channel = supabase
+      .channel(`friends-list-${crypto.randomUUID()}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => {
+        void load();
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 

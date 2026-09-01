@@ -183,7 +183,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`call-signals-${user.id}`)
+      .channel(`call-signals-${user.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

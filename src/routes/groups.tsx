@@ -64,7 +64,20 @@ function GroupsPage() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    if (!user) return;
+    const channel = supabase
+      .channel(`groups-list-${crypto.randomUUID()}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "group_members" }, () => {
+        void load();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "groups" }, () => {
+        void load();
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [load, user]);
 
   const create = async () => {
     const trimmed = name.trim();
