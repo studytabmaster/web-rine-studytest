@@ -26,16 +26,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string, displayName?: string) => {
     const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
-    setProfile((data as Profile) ?? null);
+    if (data) {
+      setProfile(data as Profile);
+      return;
+    }
+    // プロフィール未作成の場合は自動で作成（friend_code は DB 側で自動割り当て）
+    const { data: created } = await supabase
+      .from("profiles")
+      .insert({ id: userId, display_name: displayName?.trim() || "ユーザー", friend_code: "" })
+      .select("*")
+      .maybeSingle();
+    if (created) {
+      setProfile(created as Profile);
+      return;
+    }
+    const { data: retry } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+    setProfile((retry as Profile) ?? null);
   }, []);
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
-        setTimeout(() => void loadProfile(newSession.user.id), 0);
+        const u = newSession.user;
+        const name =
+          (u.user_metadata?.['display_name'] as string | undefined) ??
+          (u.user_metadata?.['full_name'] as string | undefined);
+        setTimeout(() => void loadProfile(u.id, name), 0);
       } else {
         setProfile(null);
       }
@@ -43,7 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      if (data.session?.user) void loadProfile(data.session.user.id);
+      const u = data.session?.user;
+      if (u) {
+        const name =
+          (u.user_metadata?.['display_name'] as string | undefined) ??
+          (u.user_metadata?.['full_name'] as string | undefined);
+        void loadProfile(u.id, name);
+      }
+
       setLoading(false);
     });
 
