@@ -289,8 +289,12 @@ export type Database = {
           context: string
           created_at: string
           detail: string
+          evidence_type: string | null
+          evidence_url: string | null
           group_id: string | null
           id: string
+          message_content: string | null
+          message_id: string | null
           reason: string
           reported_code: string | null
           reported_id: string
@@ -301,8 +305,12 @@ export type Database = {
           context?: string
           created_at?: string
           detail?: string
+          evidence_type?: string | null
+          evidence_url?: string | null
           group_id?: string | null
           id?: string
+          message_content?: string | null
+          message_id?: string | null
           reason: string
           reported_code?: string | null
           reported_id: string
@@ -313,8 +321,12 @@ export type Database = {
           context?: string
           created_at?: string
           detail?: string
+          evidence_type?: string | null
+          evidence_url?: string | null
           group_id?: string | null
           id?: string
+          message_content?: string | null
+          message_id?: string | null
           reason?: string
           reported_code?: string | null
           reported_id?: string

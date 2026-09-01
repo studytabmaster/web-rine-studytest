@@ -14,7 +14,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ChatFriendIdRouteImport } from './routes/chat.$friendId'
 import { Route as FriendFriendIdRouteImport } from './routes/friend.$friendId'
 import { Route as GroupGroupIdRouteImport } from './routes/group.$groupId'
@@ -44,9 +46,19 @@ const GroupsRoute = GroupsRouteImport.update({
   path: '/groups',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatFriendIdRoute = ChatFriendIdRouteImport.update({
@@ -71,7 +83,9 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/terms': typeof TermsRoute
   '/chat/$friendId': typeof ChatFriendIdRoute
   '/friend/$friendId': typeof FriendFriendIdRoute
   '/group/$groupId': typeof GroupGroupIdRoute
@@ -82,7 +96,9 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/terms': typeof TermsRoute
   '/chat/$friendId': typeof ChatFriendIdRoute
   '/friend/$friendId': typeof FriendFriendIdRoute
   '/group/$groupId': typeof GroupGroupIdRoute
@@ -94,7 +110,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/friends': typeof FriendsRoute
   '/groups': typeof GroupsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/terms': typeof TermsRoute
   '/chat/$friendId': typeof ChatFriendIdRoute
   '/friend/$friendId': typeof FriendFriendIdRoute
   '/group/$groupId': typeof GroupGroupIdRoute
@@ -107,7 +125,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/friends'
     | '/groups'
+    | '/privacy'
     | '/profile'
+    | '/terms'
     | '/chat/$friendId'
     | '/friend/$friendId'
     | '/group/$groupId'
@@ -118,7 +138,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/friends'
     | '/groups'
+    | '/privacy'
     | '/profile'
+    | '/terms'
     | '/chat/$friendId'
     | '/friend/$friendId'
     | '/group/$groupId'
@@ -129,7 +151,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/friends'
     | '/groups'
+    | '/privacy'
     | '/profile'
+    | '/terms'
     | '/chat/$friendId'
     | '/friend/$friendId'
     | '/group/$groupId'
@@ -141,7 +165,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FriendsRoute: typeof FriendsRoute
   GroupsRoute: typeof GroupsRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
+  TermsRoute: typeof TermsRoute
   ChatFriendIdRoute: typeof ChatFriendIdRoute
   FriendFriendIdRoute: typeof FriendFriendIdRoute
   GroupGroupIdRoute: typeof GroupGroupIdRoute
@@ -184,11 +210,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat/$friendId': {
@@ -221,7 +261,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FriendsRoute: FriendsRoute,
   GroupsRoute: GroupsRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
+  TermsRoute: TermsRoute,
   ChatFriendIdRoute: ChatFriendIdRoute,
   FriendFriendIdRoute: FriendFriendIdRoute,
   GroupGroupIdRoute: GroupGroupIdRoute,

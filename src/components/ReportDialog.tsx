@@ -49,13 +49,35 @@ export function ReportDialog({
   const [detail, setDetail] = useState("");
   const [alsoBlock, setAlsoBlock] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   const submit = async () => {
     if (!user) return;
     setBusy(true);
-    const { error } = await supabase
-      .from("reports")
-      .insert({ reporter_id: user.id, reported_id: targetId, reason, detail: detail.trim() });
+
+    let evidenceUrl: string | null = null;
+    let evidenceType: string | null = null;
+    if (file) {
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${user.id}/reports/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("chat-images").upload(path, file);
+      if (upErr) {
+        setBusy(false);
+        toast.error("添付ファイルをアップロードできませんでした");
+        return;
+      }
+      evidenceUrl = path;
+      evidenceType = file.type.startsWith("video") ? "video" : "image";
+    }
+
+    const { error } = await supabase.from("reports").insert({
+      reporter_id: user.id,
+      reported_id: targetId,
+      reason,
+      detail: detail.trim(),
+      evidence_url: evidenceUrl,
+      evidence_type: evidenceType,
+    });
     if (error) {
       setBusy(false);
       toast.error("通報を送信できませんでした");
@@ -65,6 +87,7 @@ export function ReportDialog({
     setBusy(false);
     setOpen(false);
     setDetail("");
+    setFile(null);
     toast.success(alsoBlock ? "通報し、ブロックしました" : "通報を受け付けました");
   };
 
@@ -103,6 +126,19 @@ export function ReportDialog({
               maxLength={1000}
               placeholder="いつ・どのような内容だったかを書いてください"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="report-file">証拠の画像・動画（任意）</Label>
+            <input
+              id="report-file"
+              type="file"
+              accept="image/*,video/*"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="w-full text-xs"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              添付したファイルは管理者のみが確認できます。
+            </p>
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
