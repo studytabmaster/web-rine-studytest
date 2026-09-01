@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -184,6 +184,18 @@ function AuthPage() {
             ? "アカウントをお持ちでない方は「新規登録（無料）」へ"
             : "すでにアカウントをお持ちの方はログインへ"}
         </button>
+
+        <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
+          登録・ログインすることで
+          <Link to="/terms" className="underline hover:text-foreground">
+            利用規約
+          </Link>
+          と
+          <Link to="/privacy" className="underline hover:text-foreground">
+            プライバシーポリシー
+          </Link>
+          に同意したものとみなされます。
+        </p>
       </div>
     </div>
   );
