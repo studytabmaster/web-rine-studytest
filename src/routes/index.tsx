@@ -96,7 +96,7 @@ function TalksPage() {
     void load();
 
     const channel = supabase
-      .channel("talks-messages")
+      .channel(`talks-messages-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
         void load();
       })

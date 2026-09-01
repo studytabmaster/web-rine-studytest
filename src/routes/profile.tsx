@@ -75,8 +75,12 @@ function ProfilePage() {
 
   const copyCode = async () => {
     if (!profile) return;
-    await navigator.clipboard.writeText(profile.friend_code);
-    toast.success("フレンドIDをコピーしました");
+    try {
+      await navigator.clipboard.writeText(profile.friend_code);
+      toast.success("フレンドIDをコピーしました");
+    } catch {
+      toast.error(`コピーできませんでした（ID: ${profile.friend_code}）`);
+    }
   };
 
   return (
