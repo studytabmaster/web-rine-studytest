@@ -55,7 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
-        setTimeout(() => void loadProfile(newSession.user.id), 0);
+        const u = newSession.user;
+        const name =
+          (u.user_metadata?.display_name as string | undefined) ??
+          (u.user_metadata?.full_name as string | undefined);
+        setTimeout(() => void loadProfile(u.id, name), 0);
       } else {
         setProfile(null);
       }
@@ -63,7 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      if (data.session?.user) void loadProfile(data.session.user.id);
+      const u = data.session?.user;
+      if (u) {
+        const name =
+          (u.user_metadata?.display_name as string | undefined) ??
+          (u.user_metadata?.full_name as string | undefined);
+        void loadProfile(u.id, name);
+      }
+
       setLoading(false);
     });
 
