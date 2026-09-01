@@ -36,6 +36,7 @@ function ProfilePage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const notificationLabel =
     permission === "granted"
@@ -135,7 +136,25 @@ function ProfilePage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="avatar">アイコン画像のURL</Label>
+            <Label htmlFor="avatar-file">アイコン画像をアップロード</Label>
+            <input
+              id="avatar-file"
+              type="file"
+              accept="image/*"
+              disabled={uploading}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void uploadAvatar(f);
+              }}
+              className="w-full text-xs"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {uploading ? "アップロード中..." : "JPG・PNG・GIF（5MBまで）"}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="avatar">アイコン画像のURL（任意）</Label>
             <Input
               id="avatar"
               value={avatarUrl}
