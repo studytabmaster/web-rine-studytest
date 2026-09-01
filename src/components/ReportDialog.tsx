@@ -127,6 +127,19 @@ export function ReportDialog({
               placeholder="いつ・どのような内容だったかを書いてください"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="report-file">証拠の画像・動画（任意）</Label>
+            <input
+              id="report-file"
+              type="file"
+              accept="image/*,video/*"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="w-full text-xs"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              添付したファイルは管理者のみが確認できます。
+            </p>
+          </div>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
               checked={alsoBlock}
