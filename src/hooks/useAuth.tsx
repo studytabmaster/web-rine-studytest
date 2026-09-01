@@ -57,8 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (newSession?.user) {
         const u = newSession.user;
         const name =
-          (u.user_metadata?.display_name as string | undefined) ??
-          (u.user_metadata?.full_name as string | undefined);
+          (u.user_metadata?.['display_name'] as string | undefined) ??
+          (u.user_metadata?.['full_name'] as string | undefined);
         setTimeout(() => void loadProfile(u.id, name), 0);
       } else {
         setProfile(null);
@@ -70,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const u = data.session?.user;
       if (u) {
         const name =
-          (u.user_metadata?.display_name as string | undefined) ??
-          (u.user_metadata?.full_name as string | undefined);
+          (u.user_metadata?.['display_name'] as string | undefined) ??
+          (u.user_metadata?.['full_name'] as string | undefined);
         void loadProfile(u.id, name);
       }
 
