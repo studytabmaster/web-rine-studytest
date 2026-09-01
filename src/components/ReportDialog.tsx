@@ -87,6 +87,7 @@ export function ReportDialog({
     setBusy(false);
     setOpen(false);
     setDetail("");
+    setFile(null);
     toast.success(alsoBlock ? "通報し、ブロックしました" : "通報を受け付けました");
   };
 
