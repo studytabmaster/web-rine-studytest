@@ -36,10 +36,20 @@ const REASONS = [
 export function ReportDialog({
   targetId,
   targetName,
+  targetCode,
+  context = "direct",
+  groupId,
+  messageId,
+  messageContent,
   trigger,
 }: {
   targetId: string;
   targetName: string;
+  targetCode?: string | null;
+  context?: "direct" | "group";
+  groupId?: string | null;
+  messageId?: string | null;
+  messageContent?: string | null;
   trigger: ReactNode;
 }) {
   const { user } = useAuth();
@@ -77,6 +87,11 @@ export function ReportDialog({
       detail: detail.trim(),
       evidence_url: evidenceUrl,
       evidence_type: evidenceType,
+      reported_code: targetCode ?? null,
+      context,
+      group_id: groupId ?? null,
+      message_id: messageId ?? null,
+      message_content: messageContent ?? null,
     });
     if (error) {
       setBusy(false);

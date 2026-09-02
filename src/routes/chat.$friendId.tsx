@@ -293,6 +293,8 @@ function ChatPage() {
               <ReportDialog
                 targetId={friend.id}
                 targetName={friend.display_name}
+                targetCode={friend.friend_code}
+                context="direct"
                 trigger={
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <Flag className="mr-2 size-4" />

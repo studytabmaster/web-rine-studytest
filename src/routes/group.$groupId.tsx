@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ChatMedia } from "@/components/ChatMedia";
+import { ReportDialog } from "@/components/ReportDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -392,6 +393,21 @@ function GroupChatPage() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                ) : !mine && sender ? (
+                  <ReportDialog
+                    targetId={sender.id}
+                    targetName={sender.display_name}
+                    targetCode={sender.friend_code}
+                    context="group"
+                    groupId={groupId}
+                    messageId={m.id}
+                    messageContent={unsent ? null : m.content || "(メディア)"}
+                    trigger={
+                      <button type="button" className="w-full text-left">
+                        {bubble}
+                      </button>
+                    }
+                  />
                 ) : (
                   bubble
                 )}
