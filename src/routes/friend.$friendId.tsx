@@ -142,6 +142,8 @@ function FriendProfilePage() {
           <ReportDialog
             targetId={friend.id}
             targetName={friend.display_name}
+            targetCode={friend.friend_code}
+            context="direct"
             trigger={
               <Button variant="ghost" className="w-full">
                 <Flag className="mr-1 size-4" />
