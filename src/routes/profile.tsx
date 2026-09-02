@@ -37,6 +37,10 @@ function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+
 
   const notificationLabel =
     permission === "granted"
@@ -114,7 +118,30 @@ function ProfilePage() {
   };
 
 
+  /** パスワードを変更する */
+  const changePassword = async () => {
+    if (newPassword.length < 6) {
+      toast.error("パスワードは6文字以上にしてください");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("確認用パスワードが一致しません");
+      return;
+    }
+    setPwBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPwBusy(false);
+    if (error) {
+      toast.error(error.message || "パスワードを変更できませんでした");
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    toast.success("パスワードを変更しました");
+  };
+
   const copyCode = async () => {
+
     if (!profile) return;
     try {
       await navigator.clipboard.writeText(profile.friend_code);
