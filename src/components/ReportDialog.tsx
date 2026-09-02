@@ -87,6 +87,11 @@ export function ReportDialog({
       detail: detail.trim(),
       evidence_url: evidenceUrl,
       evidence_type: evidenceType,
+      reported_code: targetCode ?? null,
+      context,
+      group_id: groupId ?? null,
+      message_id: messageId ?? null,
+      message_content: messageContent ?? null,
     });
     if (error) {
       setBusy(false);
