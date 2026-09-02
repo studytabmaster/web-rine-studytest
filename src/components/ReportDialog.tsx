@@ -36,10 +36,20 @@ const REASONS = [
 export function ReportDialog({
   targetId,
   targetName,
+  targetCode,
+  context = "direct",
+  groupId,
+  messageId,
+  messageContent,
   trigger,
 }: {
   targetId: string;
   targetName: string;
+  targetCode?: string | null;
+  context?: "direct" | "group";
+  groupId?: string | null;
+  messageId?: string | null;
+  messageContent?: string | null;
   trigger: ReactNode;
 }) {
   const { user } = useAuth();
