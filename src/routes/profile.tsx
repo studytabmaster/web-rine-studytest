@@ -37,6 +37,10 @@ function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+
 
   const notificationLabel =
     permission === "granted"
@@ -114,7 +118,30 @@ function ProfilePage() {
   };
 
 
+  /** パスワードを変更する */
+  const changePassword = async () => {
+    if (newPassword.length < 6) {
+      toast.error("パスワードは6文字以上にしてください");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("確認用パスワードが一致しません");
+      return;
+    }
+    setPwBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPwBusy(false);
+    if (error) {
+      toast.error(error.message || "パスワードを変更できませんでした");
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    toast.success("パスワードを変更しました");
+  };
+
   const copyCode = async () => {
+
     if (!profile) return;
     try {
       await navigator.clipboard.writeText(profile.friend_code);
@@ -206,6 +233,41 @@ function ProfilePage() {
             保存する
           </Button>
         </div>
+
+        <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
+          <p className="text-sm font-semibold">パスワードの変更</p>
+          <div className="space-y-1.5">
+            <Label htmlFor="new-password">新しいパスワード</Label>
+            <Input
+              id="new-password"
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="6文字以上"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirm-password">新しいパスワード（確認）</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => void changePassword()}
+            disabled={pwBusy || !newPassword || !confirmPassword}
+          >
+            パスワードを変更
+          </Button>
+        </div>
+
+
 
         <Button
           variant="outline"
