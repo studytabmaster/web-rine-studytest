@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Ban, Flag, ImagePlus, MoreVertical, Phone, Send, Undo2, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { removeChatMedia } from "@/lib/media-cleanup";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "@/components/CallProvider";
 import { useBlocks } from "@/hooks/useBlocks";
@@ -204,6 +205,8 @@ function ChatPage() {
   };
 
   const unsend = async (id: string) => {
+    // 取り消し対象の添付ファイルをストレージからも物理削除する
+    const target = messages.find((m) => m.id === id);
     const { error } = await supabase
       .from("messages")
       .update({ deleted_at: new Date().toISOString(), content: "", image_url: null })
@@ -219,6 +222,10 @@ function ChatPage() {
           : m,
       ),
     );
+    if (target?.image_url) {
+      const { error: mediaError } = await removeChatMedia([target.image_url]);
+      if (mediaError) console.warn("media cleanup failed", mediaError);
+    }
     toast.success("送信を取り消しました");
   };
 
