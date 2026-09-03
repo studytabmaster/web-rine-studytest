@@ -10,6 +10,7 @@ export function ChatMedia({ path, mediaType }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [reload, setReload] = useState(0);
+  const [busy, setBusy] = useState(false);
   const isVideo = mediaType === "video";
 
   useEffect(() => {
