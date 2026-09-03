@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 type Props = { path: string; mediaType?: string | null };
@@ -9,6 +10,7 @@ export function ChatMedia({ path, mediaType }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [reload, setReload] = useState(0);
+  const [busy, setBusy] = useState(false);
   const isVideo = mediaType === "video";
 
   useEffect(() => {
@@ -65,27 +67,59 @@ export function ChatMedia({ path, mediaType }: Props) {
     return <div className="h-40 w-40 animate-pulse rounded-xl bg-foreground/10" />;
   }
 
-  if (isVideo) {
-    return (
-      <video
-        src={url}
-        controls
-        playsInline
-        preload="metadata"
-        className="max-h-72 w-auto max-w-full rounded-xl bg-black"
-      />
-    );
-  }
+  const download = async () => {
+    setBusy(true);
+    try {
+      const { data: blob, error } = await supabase.storage.from("chat-images").download(path);
+      if (error || !blob) throw error ?? new Error("download failed");
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = path.split("/").pop() || (isVideo ? "video.mp4" : "image.jpg");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+      toast.success("ダウンロードしました");
+    } catch {
+      toast.error("ダウンロードできませんでした");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <a href={url} target="_blank" rel="noreferrer">
-      <img
-        src={url}
-        alt="送信されたメディア"
-        loading="lazy"
-        onError={() => setFailed(true)}
-        className="max-h-64 w-auto max-w-full rounded-xl object-cover"
-      />
-    </a>
+    <div className="relative inline-block">
+      {isVideo ? (
+        <video
+          src={url}
+          controls
+          playsInline
+          preload="metadata"
+          className="max-h-72 w-auto max-w-full rounded-xl bg-black"
+        />
+      ) : (
+        <a href={url} target="_blank" rel="noreferrer">
+          <img
+            src={url}
+            alt="送信されたメディア"
+            loading="lazy"
+            onError={() => setFailed(true)}
+            className="max-h-64 w-auto max-w-full rounded-xl object-cover"
+          />
+        </a>
+      )}
+      <button
+        type="button"
+        onClick={download}
+        disabled={busy}
+        aria-label="ダウンロード"
+        title="ダウンロード"
+        className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-foreground/70 px-3 py-1.5 text-xs font-medium text-background backdrop-blur transition hover:bg-foreground/85 disabled:opacity-60"
+      >
+        <Download className="size-3.5" />
+        {busy ? "保存中…" : "保存"}
+      </button>
+    </div>
   );
 }

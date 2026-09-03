@@ -1,0 +1,19 @@
+ALTER TABLE public.call_signals REPLICA IDENTITY FULL;
+ALTER TABLE public.messages REPLICA IDENTITY FULL;
+ALTER TABLE public.group_messages REPLICA IDENTITY FULL;
+ALTER TABLE public.friendships REPLICA IDENTITY FULL;
+ALTER TABLE public.group_members REPLICA IDENTITY FULL;
+ALTER TABLE public.groups REPLICA IDENTITY FULL;
+ALTER TABLE public.group_reads REPLICA IDENTITY FULL;
+ALTER TABLE public.blocks REPLICA IDENTITY FULL;
+ALTER TABLE public.profiles REPLICA IDENTITY FULL;
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.call_signals;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.group_messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.friendships;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.group_members;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.groups;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.group_reads;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.blocks;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
