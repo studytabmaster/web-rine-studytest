@@ -14,7 +14,7 @@ import type { CallSignal, Profile } from "@/lib/rine";
 import { CallOverlay } from "@/components/CallOverlay";
 import { toast } from "sonner";
 
-export type CallStatus = "idle" | "calling" | "incoming" | "connecting" | "active";
+export type CallStatus = "idle" | "calling" | "ringing" | "incoming" | "connecting" | "active";
 
 type CallState = {
   status: CallStatus;
@@ -38,10 +38,7 @@ type CallContextValue = CallState & {
 const CallContext = createContext<CallContextValue | null>(null);
 
 const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-  ],
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
 };
 
 export function CallProvider({ children }: { children: ReactNode }) {
@@ -61,6 +58,14 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const peerIdRef = useRef<string | null>(null);
   const pendingOffer = useRef<RTCSessionDescriptionInit | null>(null);
   const pendingIce = useRef<RTCIceCandidateInit[]>([]);
+  const noAnswerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearNoAnswerTimer = useCallback(() => {
+    if (noAnswerTimer.current) {
+      clearTimeout(noAnswerTimer.current);
+      noAnswerTimer.current = null;
+    }
+  }, []);
 
   const sendSignal = useCallback(
     async (kind: CallSignal["kind"], payload: unknown, isVideo = false) => {
@@ -78,6 +83,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
   );
 
   const cleanup = useCallback(() => {
+    if (noAnswerTimer.current) {
+      clearTimeout(noAnswerTimer.current);
+      noAnswerTimer.current = null;
+    }
     pcRef.current?.close();
     pcRef.current = null;
     localRef.current?.getTracks().forEach((t) => t.stop());
@@ -164,6 +173,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const acceptCall = useCallback(async () => {
     const offer = pendingOffer.current;
     if (!offer) return;
+    clearNoAnswerTimer();
     try {
       setStatus("connecting");
       const pc = await createPeerConnection(video);
@@ -177,7 +187,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       toast.error("カメラ・マイクを利用できませんでした");
       hangUp();
     }
-  }, [video, createPeerConnection, hangUp]);
+  }, [video, createPeerConnection, hangUp, clearNoAnswerTimer]);
 
   // realtime signaling
   useEffect(() => {
@@ -219,6 +229,29 @@ export function CallProvider({ children }: { children: ReactNode }) {
               tag: `call-${signal.from_user}`,
               requireInteraction: true,
             });
+            // 相手（発信者）に「呼び出し中」を即時通知
+            void sendSignalRef.current("ringing", null, signal.video);
+            // 一定時間応答がなければ不在として双方に反映
+            if (noAnswerTimer.current) clearTimeout(noAnswerTimer.current);
+            noAnswerTimer.current = setTimeout(() => {
+              if (statusRef.current !== "incoming") return;
+              void sendSignalRef.current("unanswered", null);
+              toast("不在着信がありました");
+              cleanupRef.current();
+            }, 30000);
+            return;
+          }
+
+          if (signal.kind === "ringing") {
+            if (statusRef.current === "calling") setStatus("ringing");
+            return;
+          }
+
+          if (signal.kind === "unanswered") {
+            if (statusRef.current !== "idle") {
+              toast("相手が応答しませんでした（不在）");
+              cleanupRef.current();
+            }
             return;
           }
 
@@ -244,7 +277,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
           if (signal.kind === "end" || signal.kind === "reject") {
             if (statusRef.current !== "idle") {
-              toast(signal.kind === "reject" ? "応答がありませんでした" : "通話が終了しました");
+              toast(signal.kind === "reject" ? "相手は通話中です" : "通話が終了しました");
               cleanupRef.current();
             }
           }
@@ -260,6 +293,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const statusRef = useRef(status);
   useEffect(() => {
     statusRef.current = status;
+  }, [status]);
+
+  // 発信側: 応答がないまま一定時間経過したら不在として終了
+  useEffect(() => {
+    if (status !== "calling" && status !== "ringing") return;
+    const id = setTimeout(() => {
+      void sendSignalRef.current("end", null);
+      toast("応答がありませんでした（不在）");
+      cleanupRef.current();
+    }, 35000);
+    return () => clearTimeout(id);
   }, [status]);
 
   useEffect(() => {
