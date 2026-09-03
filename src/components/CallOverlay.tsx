@@ -39,12 +39,14 @@ export function CallOverlay() {
 
   const label =
     status === "calling"
-      ? "呼び出し中…"
-      : status === "incoming"
-        ? `${video ? "ビデオ通話" : "音声通話"}の着信`
-        : status === "connecting"
-          ? "接続中…"
-          : formatDuration(seconds);
+      ? "発信中…"
+      : status === "ringing"
+        ? "呼び出し中…（相手の端末が鳴っています）"
+        : status === "incoming"
+          ? `${video ? "ビデオ通話" : "音声通話"}の着信`
+          : status === "connecting"
+            ? "接続中…"
+            : formatDuration(seconds);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-[var(--brand-dark)] px-6 py-12 text-primary-foreground">
@@ -105,7 +107,7 @@ export function CallOverlay() {
               size="call"
               onClick={() => hangUp(true)}
               aria-label="通話を終了"
-              className={cn(status === "calling" && "animate-pulse")}
+              className={cn((status === "calling" || status === "ringing") && "animate-pulse")}
             >
               <PhoneOff className="size-7" />
             </Button>

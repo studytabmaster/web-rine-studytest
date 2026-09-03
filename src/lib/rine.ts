@@ -24,7 +24,7 @@ export type CallSignal = {
   id: string;
   from_user: string;
   to_user: string;
-  kind: "offer" | "answer" | "ice" | "end" | "reject";
+  kind: "offer" | "answer" | "ice" | "end" | "reject" | "ringing" | "unanswered";
   payload: unknown;
   video: boolean;
   created_at: string;
