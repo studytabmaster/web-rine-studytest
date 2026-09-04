@@ -64,6 +64,24 @@ type ReportRow = {
 
 type Staff = { name: string; code: string; role: string };
 
+type BanRow = {
+  id: string;
+  userId: string;
+  who: string;
+  reason: string;
+  until: string | null;
+  active: boolean;
+};
+
+type WarnRow = {
+  id: string;
+  who: string;
+  message: string;
+  createdAt: string;
+  acknowledged: boolean;
+};
+
+
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者",
   moderator: "モデレーター",
