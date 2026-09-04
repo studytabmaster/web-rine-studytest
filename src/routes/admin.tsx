@@ -75,6 +75,10 @@ function AdminPage() {
   const claim = useServerFn(claimAdmin);
   const fetchStaff = useServerFn(listStaff);
   const changeRole = useServerFn(setUserRole);
+  const doBan = useServerFn(banUser);
+  const doUnban = useServerFn(unbanUser);
+  const doWarn = useServerFn(warnUser);
+  const fetchModeration = useServerFn(listModeration);
 
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
@@ -88,6 +92,25 @@ function AdminPage() {
   const [role, setRole] = useState<"admin" | "moderator" | "user">("moderator");
   const [roleBusy, setRoleBusy] = useState(false);
 
+  const [modCode, setModCode] = useState("");
+  const [banHours, setBanHours] = useState("24");
+  const [banReason, setBanReason] = useState("");
+  const [warnText, setWarnText] = useState("");
+  const [modBusy, setModBusy] = useState(false);
+  const [bans, setBans] = useState<BanRow[]>([]);
+  const [warnings, setWarnings] = useState<WarnRow[]>([]);
+
+  const loadModeration = useCallback(async () => {
+    try {
+      const r = await fetchModeration({});
+      setBans(r.bans as BanRow[]);
+      setWarnings(r.warnings as WarnRow[]);
+    } catch {
+      setBans([]);
+      setWarnings([]);
+    }
+  }, [fetchModeration]);
+
   const loadStaff = useCallback(async () => {
     try {
       const r = await fetchStaff({});
@@ -96,6 +119,7 @@ function AdminPage() {
       setStaff([]);
     }
   }, [fetchStaff]);
+
 
   const loadReports = useCallback(async () => {
     const { data } = await supabase
