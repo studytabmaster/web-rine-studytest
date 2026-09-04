@@ -165,10 +165,11 @@ function AdminPage() {
         if (r.isAdmin) {
           void loadReports();
           void loadStaff();
+          void loadModeration();
         }
       })
       .catch(() => setIsAdmin(false));
-  }, [check, loadReports, loadStaff]);
+  }, [check, loadReports, loadStaff, loadModeration]);
 
   const unlock = async () => {
     setBusy(true);
@@ -177,6 +178,7 @@ function AdminPage() {
       setIsAdmin(true);
       await loadReports();
       await loadStaff();
+      await loadModeration();
       toast.success("管理者として解錠しました");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "解錠できませんでした");
@@ -184,6 +186,51 @@ function AdminPage() {
       setBusy(false);
     }
   };
+
+  const applyBan = async () => {
+    setModBusy(true);
+    try {
+      const r = await doBan({
+        data: { friendCode: modCode.trim(), hours: Number(banHours), reason: banReason.trim() },
+      });
+      toast.success(
+        r.until
+          ? `${r.name} さんを ${new Date(r.until).toLocaleString("ja-JP")} まで利用停止にしました`
+          : `${r.name} さんを無期限で利用停止にしました`,
+      );
+      setBanReason("");
+      await loadModeration();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "設定できませんでした");
+    } finally {
+      setModBusy(false);
+    }
+  };
+
+  const releaseBan = async (userId: string) => {
+    try {
+      await doUnban({ data: { userId } });
+      toast.success("利用停止を解除しました");
+      await loadModeration();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "解除できませんでした");
+    }
+  };
+
+  const sendWarning = async () => {
+    setModBusy(true);
+    try {
+      const r = await doWarn({ data: { friendCode: modCode.trim(), message: warnText.trim() } });
+      toast.success(`${r.name} さんに警告を送りました`);
+      setWarnText("");
+      await loadModeration();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "送れませんでした");
+    } finally {
+      setModBusy(false);
+    }
+  };
+
 
   const applyRole = async () => {
     setRoleBusy(true);
