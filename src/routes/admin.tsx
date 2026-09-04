@@ -22,7 +22,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { checkAdmin, claimAdmin, listStaff, setUserRole } from "@/lib/admin.functions";
+import {
+  banUser,
+  checkAdmin,
+  claimAdmin,
+  listModeration,
+  listStaff,
+  setUserRole,
+  unbanUser,
+  warnUser,
+} from "@/lib/admin.functions";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
