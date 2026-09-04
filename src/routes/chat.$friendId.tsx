@@ -220,16 +220,28 @@ function ChatPage() {
       toast.error("アップロードできませんでした");
       return;
     }
-    const { error } = await supabase.from("messages").insert({
-      sender_id: user.id,
-      receiver_id: friendId,
-      content: "",
-      image_url: path,
-      media_type: check.mediaType,
-    });
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        sender_id: user.id,
+        receiver_id: friendId,
+        content: "",
+        image_url: path,
+        media_type: check.mediaType,
+      })
+      .select("*")
+      .maybeSingle();
     setUploading(false);
-    if (error) toast.error("送信できませんでした");
+    if (error) {
+      toast.error("送信できませんでした");
+      return;
+    }
+    if (data) {
+      const row = data as Message;
+      setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
+    }
   };
+
 
   const unsend = async (id: string) => {
     // 取り消し対象の添付ファイルをストレージからも物理削除する
