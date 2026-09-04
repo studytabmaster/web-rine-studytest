@@ -160,14 +160,41 @@ function ChatPage() {
       return;
     }
     setText("");
-    const { error } = await supabase
+    // 楽観的に即表示 → サーバー確定行で置き換え（送信ラグ対策）
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimistic: Message = {
+      id: tempId,
+      sender_id: user.id,
+      receiver_id: friendId,
+      content,
+      image_url: null,
+      media_type: "image",
+      read_at: null,
+      deleted_at: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+    const { data, error } = await supabase
       .from("messages")
-      .insert({ sender_id: user.id, receiver_id: friendId, content });
+      .insert({ sender_id: user.id, receiver_id: friendId, content })
+      .select("*")
+      .maybeSingle();
     if (error) {
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       toast.error("送信できませんでした");
       setText(content);
+      return;
+    }
+    if (data) {
+      const row = data as Message;
+      setMessages((prev) =>
+        prev.some((m) => m.id === row.id)
+          ? prev.filter((m) => m.id !== tempId)
+          : prev.map((m) => (m.id === tempId ? row : m)),
+      );
     }
   };
+
 
   const pickMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
