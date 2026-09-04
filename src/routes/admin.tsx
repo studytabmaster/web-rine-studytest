@@ -22,17 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  banUser,
-  checkAdmin,
-  claimAdmin,
-  listModeration,
-  listStaff,
-  setUserRole,
-  unbanUser,
-  warnUser,
-} from "@/lib/admin.functions";
-
+import { checkAdmin, claimAdmin, listStaff, setUserRole } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -64,24 +54,6 @@ type ReportRow = {
 
 type Staff = { name: string; code: string; role: string };
 
-type BanRow = {
-  id: string;
-  userId: string;
-  who: string;
-  reason: string;
-  until: string | null;
-  active: boolean;
-};
-
-type WarnRow = {
-  id: string;
-  who: string;
-  message: string;
-  createdAt: string;
-  acknowledged: boolean;
-};
-
-
 const ROLE_LABEL: Record<string, string> = {
   admin: "管理者",
   moderator: "モデレーター",
@@ -93,10 +65,6 @@ function AdminPage() {
   const claim = useServerFn(claimAdmin);
   const fetchStaff = useServerFn(listStaff);
   const changeRole = useServerFn(setUserRole);
-  const doBan = useServerFn(banUser);
-  const doUnban = useServerFn(unbanUser);
-  const doWarn = useServerFn(warnUser);
-  const fetchModeration = useServerFn(listModeration);
 
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
@@ -110,25 +78,6 @@ function AdminPage() {
   const [role, setRole] = useState<"admin" | "moderator" | "user">("moderator");
   const [roleBusy, setRoleBusy] = useState(false);
 
-  const [modCode, setModCode] = useState("");
-  const [banHours, setBanHours] = useState("24");
-  const [banReason, setBanReason] = useState("");
-  const [warnText, setWarnText] = useState("");
-  const [modBusy, setModBusy] = useState(false);
-  const [bans, setBans] = useState<BanRow[]>([]);
-  const [warnings, setWarnings] = useState<WarnRow[]>([]);
-
-  const loadModeration = useCallback(async () => {
-    try {
-      const r = await fetchModeration({});
-      setBans(r.bans as BanRow[]);
-      setWarnings(r.warnings as WarnRow[]);
-    } catch {
-      setBans([]);
-      setWarnings([]);
-    }
-  }, [fetchModeration]);
-
   const loadStaff = useCallback(async () => {
     try {
       const r = await fetchStaff({});
@@ -137,7 +86,6 @@ function AdminPage() {
       setStaff([]);
     }
   }, [fetchStaff]);
-
 
   const loadReports = useCallback(async () => {
     const { data } = await supabase
@@ -165,11 +113,10 @@ function AdminPage() {
         if (r.isAdmin) {
           void loadReports();
           void loadStaff();
-          void loadModeration();
         }
       })
       .catch(() => setIsAdmin(false));
-  }, [check, loadReports, loadStaff, loadModeration]);
+  }, [check, loadReports, loadStaff]);
 
   const unlock = async () => {
     setBusy(true);
@@ -178,7 +125,6 @@ function AdminPage() {
       setIsAdmin(true);
       await loadReports();
       await loadStaff();
-      await loadModeration();
       toast.success("管理者として解錠しました");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "解錠できませんでした");
@@ -186,51 +132,6 @@ function AdminPage() {
       setBusy(false);
     }
   };
-
-  const applyBan = async () => {
-    setModBusy(true);
-    try {
-      const r = await doBan({
-        data: { friendCode: modCode.trim(), hours: Number(banHours), reason: banReason.trim() },
-      });
-      toast.success(
-        r.until
-          ? `${r.name} さんを ${new Date(r.until).toLocaleString("ja-JP")} まで利用停止にしました`
-          : `${r.name} さんを無期限で利用停止にしました`,
-      );
-      setBanReason("");
-      await loadModeration();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "設定できませんでした");
-    } finally {
-      setModBusy(false);
-    }
-  };
-
-  const releaseBan = async (userId: string) => {
-    try {
-      await doUnban({ data: { userId } });
-      toast.success("利用停止を解除しました");
-      await loadModeration();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "解除できませんでした");
-    }
-  };
-
-  const sendWarning = async () => {
-    setModBusy(true);
-    try {
-      const r = await doWarn({ data: { friendCode: modCode.trim(), message: warnText.trim() } });
-      toast.success(`${r.name} さんに警告を送りました`);
-      setWarnText("");
-      await loadModeration();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "送れませんでした");
-    } finally {
-      setModBusy(false);
-    }
-  };
-
 
   const applyRole = async () => {
     setRoleBusy(true);

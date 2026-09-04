@@ -2,8 +2,6 @@ import { useEffect, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { MessageCircle, Users, UsersRound, UserRound } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { ModerationNotice } from "@/components/ModerationNotice";
-
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -45,10 +43,7 @@ export function AppShell({
         {action}
       </header>
 
-      <ModerationNotice />
-
       <main className="flex-1 pb-24">{children}</main>
-
 
       <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-lg -translate-x-1/2 border-t border-border bg-background/95 backdrop-blur">
         <ul className="flex">

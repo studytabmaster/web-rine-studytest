@@ -343,36 +343,6 @@ export type Database = {
           },
         ]
       }
-      user_bans: {
-        Row: {
-          banned_until: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          reason: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          banned_until?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          reason?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          banned_until?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          reason?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -390,33 +360,6 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_warnings: {
-        Row: {
-          acknowledged_at: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          message: string
-          user_id: string
-        }
-        Insert: {
-          acknowledged_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          message: string
-          user_id: string
-        }
-        Update: {
-          acknowledged_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          message?: string
           user_id?: string
         }
         Relationships: []
@@ -469,7 +412,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_banned: { Args: { _user_id: string }; Returns: boolean }
       is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }

@@ -200,37 +200,12 @@ function GroupChatPage() {
     const content = text.trim();
     if (!content || !user) return;
     setText("");
-    // 楽観的に即表示 → サーバー確定行で置き換え（送信ラグ対策）
-    const tempId = `temp-${crypto.randomUUID()}`;
-    const optimistic: GroupMessage = {
-      id: tempId,
-      group_id: groupId,
-      sender_id: user.id,
-      content,
-      image_url: null,
-      media_type: "image",
-      deleted_at: null,
-      created_at: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimistic]);
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("group_messages")
-      .insert({ group_id: groupId, sender_id: user.id, content })
-      .select("*")
-      .maybeSingle();
+      .insert({ group_id: groupId, sender_id: user.id, content });
     if (error) {
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       toast.error("送信できませんでした");
       setText(content);
-      return;
-    }
-    if (data) {
-      const row = data as GroupMessage;
-      setMessages((prev) =>
-        prev.some((m) => m.id === row.id)
-          ? prev.filter((m) => m.id !== tempId)
-          : prev.map((m) => (m.id === tempId ? row : m)),
-      );
     }
   };
 
@@ -254,28 +229,16 @@ function GroupChatPage() {
       toast.error("アップロードできませんでした");
       return;
     }
-    const { data, error } = await supabase
-      .from("group_messages")
-      .insert({
-        group_id: groupId,
-        sender_id: user.id,
-        content: "",
-        image_url: path,
-        media_type: check.mediaType,
-      })
-      .select("*")
-      .maybeSingle();
+    const { error } = await supabase.from("group_messages").insert({
+      group_id: groupId,
+      sender_id: user.id,
+      content: "",
+      image_url: path,
+      media_type: check.mediaType,
+    });
     setUploading(false);
-    if (error) {
-      toast.error("送信できませんでした");
-      return;
-    }
-    if (data) {
-      const row = data as GroupMessage;
-      setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
-    }
+    if (error) toast.error("送信できませんでした");
   };
-
 
   const unsend = async (id: string) => {
     // 取り消し対象の添付ファイルをストレージからも物理削除する
