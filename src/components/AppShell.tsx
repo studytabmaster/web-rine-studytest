@@ -2,6 +2,8 @@ import { useEffect, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { MessageCircle, Users, UsersRound, UserRound } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { ModerationNotice } from "@/components/ModerationNotice";
+
 import { cn } from "@/lib/utils";
 
 const TABS = [
