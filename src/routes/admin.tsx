@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ShieldCheck, UserCog } from "lucide-react";
+import { AlertTriangle, Ban, ShieldCheck, UserCog } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ChatMedia } from "@/components/ChatMedia";
 import { Button } from "@/components/ui/button";
