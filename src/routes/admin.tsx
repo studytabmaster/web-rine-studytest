@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ShieldCheck, UserCog } from "lucide-react";
+import { AlertTriangle, Ban, ShieldCheck, UserCog } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ChatMedia } from "@/components/ChatMedia";
 import { Button } from "@/components/ui/button";
@@ -353,6 +353,144 @@ function AdminPage() {
                       <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">
                         {ROLE_LABEL[s.role] ?? s.role}
                       </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-3xl bg-card p-5 shadow-soft">
+            <div className="mb-3 flex items-center gap-2">
+              <Ban className="size-5 text-destructive" />
+              <h2 className="text-base font-bold">利用停止・警告</h2>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              相手の8桁の識別IDを入力して、利用停止や警告を送信します。
+            </p>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="mod-code">識別ID</Label>
+                <Input
+                  id="mod-code"
+                  value={modCode}
+                  onChange={(e) => setModCode(e.target.value.toUpperCase())}
+                  placeholder="ABCD2345"
+                  className="font-mono tracking-widest"
+                  maxLength={8}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ban-hours">停止期間</Label>
+                <Select value={banHours} onValueChange={setBanHours}>
+                  <SelectTrigger id="ban-hours">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1時間</SelectItem>
+                    <SelectItem value="6">6時間</SelectItem>
+                    <SelectItem value="24">24時間</SelectItem>
+                    <SelectItem value="168">7日間</SelectItem>
+                    <SelectItem value="720">30日間</SelectItem>
+                    <SelectItem value="0">無期限</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ban-reason">停止理由</Label>
+                <Input
+                  id="ban-reason"
+                  value={banReason}
+                  onChange={(e) => setBanReason(e.target.value)}
+                  placeholder="例: 暴言・スパム行為"
+                />
+              </div>
+              <Button
+                variant="destructive"
+                size="pill"
+                className="w-full"
+                disabled={modBusy || modCode.trim().length < 4 || !banReason.trim()}
+                onClick={applyBan}
+              >
+                {modBusy ? "設定中..." : "利用停止にする"}
+              </Button>
+
+              <div className="space-y-1.5 border-t border-border pt-3">
+                <Label htmlFor="warn-text">警告文</Label>
+                <Input
+                  id="warn-text"
+                  value={warnText}
+                  onChange={(e) => setWarnText(e.target.value)}
+                  placeholder="例: 不適切な内容が確認されました"
+                />
+                <Button
+                  variant="brand"
+                  size="pill"
+                  className="w-full"
+                  disabled={modBusy || modCode.trim().length < 4 || !warnText.trim()}
+                  onClick={sendWarning}
+                >
+                  {modBusy ? "送信中..." : "警告を送信する"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-5 border-t border-border pt-4">
+              <p className="mb-2 text-xs font-semibold text-muted-foreground">利用停止中のユーザー</p>
+              {bans.length === 0 ? (
+                <p className="text-xs text-muted-foreground">利用停止中のユーザーはいません</p>
+              ) : (
+                <ul className="space-y-2">
+                  {bans.map((b) => (
+                    <li
+                      key={b.id}
+                      className="flex items-center justify-between gap-2 rounded-xl bg-muted p-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{b.who}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {b.until
+                            ? `〜${new Date(b.until).toLocaleString("ja-JP")}`
+                            : "無期限"}
+                          · {b.reason}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => releaseBan(b.userId)}
+                        disabled={!b.active}
+                      >
+                        解除
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="mt-5 border-t border-border pt-4">
+              <p className="mb-2 text-xs font-semibold text-muted-foreground">最近の警告</p>
+              {warnings.length === 0 ? (
+                <p className="text-xs text-muted-foreground">最近の警告はありません</p>
+              ) : (
+                <ul className="space-y-2">
+                  {warnings.map((w) => (
+                    <li
+                      key={w.id}
+                      className="flex items-start gap-2 rounded-xl bg-muted p-3"
+                    >
+                      <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{w.who}</p>
+                        <p className="whitespace-pre-wrap text-xs text-muted-foreground">
+                          {w.message}
+                        </p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          {new Date(w.createdAt).toLocaleString("ja-JP")}
+                          {w.acknowledged ? " · 確認済み" : " · 未確認"}
+                        </p>
+                      </div>
                     </li>
                   ))}
                 </ul>
