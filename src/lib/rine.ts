@@ -46,6 +46,23 @@ export function formatListTime(iso: string) {
   return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" });
 }
 
+/** 日付区切り用のラベル（今日／昨日／日付） */
+export function formatDateLabel(iso: string) {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "今日";
+  if (d.toDateString() === yesterday.toDateString()) return "昨日";
+  return d.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+}
+
+/** 2つの日時が別の日かどうか */
+export function isNewDay(prevIso: string | undefined, iso: string) {
+  if (!prevIso) return true;
+  return new Date(prevIso).toDateString() !== new Date(iso).toDateString();
+}
+
 export function formatDuration(seconds: number) {
   const m = Math.floor(seconds / 60)
     .toString()

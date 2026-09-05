@@ -27,9 +27,11 @@ import {
 } from "@/components/ui/dialog";
 import {
   UNSENT_TEXT,
+  formatDateLabel,
   formatTime,
   initials,
   inspectAttachment,
+  isNewDay,
   type Group,
   type GroupMessage,
   type GroupRead,
@@ -370,7 +372,8 @@ function GroupChatPage() {
             最初のメッセージを送ってみましょう
           </p>
         )}
-        {messages.map((m) => {
+        {messages.map((m, i) => {
+          const showDay = isNewDay(messages[i - 1]?.created_at, m.created_at);
           const mine = m.sender_id === user?.id;
           const unsent = !!m.deleted_at;
           const sender = members.find((p) => p.id === m.sender_id);
@@ -403,7 +406,15 @@ function GroupChatPage() {
             </div>
           );
           return (
-            <div key={m.id} className={cn("flex items-end gap-1.5", mine && "flex-row-reverse")}>
+            <div key={m.id}>
+              {showDay && (
+                <div className="flex justify-center py-3">
+                  <span className="rounded-full bg-foreground/10 px-3 py-1 text-[11px] text-foreground/60">
+                    {formatDateLabel(m.created_at)}
+                  </span>
+                </div>
+              )}
+              <div className={cn("flex items-end gap-1.5", mine && "flex-row-reverse")}>
               {!mine && (
                 <Avatar className="size-7">
                   <AvatarImage src={sender?.avatar_url ?? undefined} alt={sender?.display_name ?? ""} />
@@ -467,6 +478,7 @@ function GroupChatPage() {
                 )}
                 {formatTime(m.created_at)}
               </span>
+              </div>
             </div>
           );
         })}
