@@ -359,13 +359,14 @@ function ChatPage() {
             メッセージを送ってトークを始めましょう
           </p>
         )}
-        {messages.map((m) => {
+        {messages.map((m, i) => {
           const mine = m.sender_id === user?.id;
           const unsent = !!m.deleted_at;
+          const showDay = isNewDay(messages[i - 1]?.created_at, m.created_at);
           const bubble = (
             <div
               className={cn(
-                "max-w-[72%] shadow-soft",
+                "shadow-soft",
                 m.image_url && !unsent
                   ? "overflow-hidden rounded-2xl"
                   : cn(
@@ -388,39 +389,106 @@ function ChatPage() {
             </div>
           );
 
+          const copy = async () => {
+            try {
+              await navigator.clipboard.writeText(m.content);
+              toast.success("コピーしました");
+            } catch {
+              toast.error("コピーできませんでした");
+            }
+          };
+
           return (
-            <div key={m.id} className={cn("flex items-end gap-1", mine && "flex-row-reverse")}>
-              {mine && !unsent ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button type="button" className="max-w-[72%] text-left">
-                      {bubble}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => void unsend(m.id)}>
-                      <Undo2 className="mr-2 size-4" />
-                      送信を取り消す
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                bubble
+            <div key={m.id}>
+              {showDay && (
+                <div className="flex justify-center py-3">
+                  <span className="rounded-full bg-foreground/10 px-3 py-1 text-[11px] text-foreground/60">
+                    {formatDateLabel(m.created_at)}
+                  </span>
+                </div>
               )}
-              <span
-                className={cn(
-                  "flex flex-col pb-1 text-[10px] text-foreground/50",
-                  mine ? "items-end" : "items-start",
+              <div className={cn("flex items-end gap-1.5", mine && "flex-row-reverse")}>
+                {!mine && (
+                  <Link to="/friend/$friendId" params={{ friendId }} className="shrink-0">
+                    <Avatar className="size-7">
+                      <AvatarImage
+                        src={friend?.avatar_url ?? undefined}
+                        alt={friend?.display_name ?? ""}
+                      />
+                      <AvatarFallback className="text-[10px]">
+                        {initials(friend?.display_name ?? "?")}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
                 )}
-              >
-                {mine && !unsent && (
-                  <span className="text-foreground/60">{m.read_at ? "既読" : "未読"}</span>
-                )}
-                {formatTime(m.created_at)}
-              </span>
+                <div className={cn("max-w-[72%]", mine ? "items-end" : "items-start")}>
+                  {!mine && (
+                    <p className="mb-0.5 text-[11px] text-foreground/60">
+                      {friend?.display_name ?? "友だち"}
+                      {friend && (
+                        <span className="ml-1 font-mono text-[9px] text-foreground/40">
+                          ID:{friend.friend_code}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  {unsent ? (
+                    bubble
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button type="button" className="w-full text-left">
+                          {bubble}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align={mine ? "end" : "start"}>
+                        {m.content && (
+                          <DropdownMenuItem onSelect={() => void copy()}>
+                            <Copy className="mr-2 size-4" />
+                            コピー
+                          </DropdownMenuItem>
+                        )}
+                        {mine ? (
+                          <DropdownMenuItem onSelect={() => void unsend(m.id)}>
+                            <Undo2 className="mr-2 size-4" />
+                            送信を取り消す
+                          </DropdownMenuItem>
+                        ) : friend ? (
+                          <ReportDialog
+                            targetId={friend.id}
+                            targetName={friend.display_name}
+                            targetCode={friend.friend_code}
+                            context="direct"
+                            messageId={m.id}
+                            messageContent={m.content || "(メディア)"}
+                            trigger={
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Flag className="mr-2 size-4" />
+                                このメッセージを通報
+                              </DropdownMenuItem>
+                            }
+                          />
+                        ) : null}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+                <span
+                  className={cn(
+                    "flex flex-col pb-1 text-[10px] text-foreground/50",
+                    mine ? "items-end" : "items-start",
+                  )}
+                >
+                  {mine && !unsent && (
+                    <span className="text-foreground/60">{m.read_at ? "既読" : "未読"}</span>
+                  )}
+                  {formatTime(m.created_at)}
+                </span>
+              </div>
             </div>
           );
         })}
+
         <div ref={bottomRef} />
       </div>
 
