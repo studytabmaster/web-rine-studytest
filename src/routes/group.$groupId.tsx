@@ -478,6 +478,7 @@ function GroupChatPage() {
                 )}
                 {formatTime(m.created_at)}
               </span>
+              </div>
             </div>
           );
         })}
