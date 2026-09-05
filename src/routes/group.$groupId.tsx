@@ -406,7 +406,15 @@ function GroupChatPage() {
             </div>
           );
           return (
-            <div key={m.id} className={cn("flex items-end gap-1.5", mine && "flex-row-reverse")}>
+            <div key={m.id}>
+              {showDay && (
+                <div className="flex justify-center py-3">
+                  <span className="rounded-full bg-foreground/10 px-3 py-1 text-[11px] text-foreground/60">
+                    {formatDateLabel(m.created_at)}
+                  </span>
+                </div>
+              )}
+              <div className={cn("flex items-end gap-1.5", mine && "flex-row-reverse")}>
               {!mine && (
                 <Avatar className="size-7">
                   <AvatarImage src={sender?.avatar_url ?? undefined} alt={sender?.display_name ?? ""} />
