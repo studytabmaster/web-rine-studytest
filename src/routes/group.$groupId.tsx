@@ -370,7 +370,8 @@ function GroupChatPage() {
             最初のメッセージを送ってみましょう
           </p>
         )}
-        {messages.map((m) => {
+        {messages.map((m, i) => {
+          const showDay = isNewDay(messages[i - 1]?.created_at, m.created_at);
           const mine = m.sender_id === user?.id;
           const unsent = !!m.deleted_at;
           const sender = members.find((p) => p.id === m.sender_id);
