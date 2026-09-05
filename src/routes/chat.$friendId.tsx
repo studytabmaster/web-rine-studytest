@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Ban, Flag, ImagePlus, MoreVertical, Phone, Send, Undo2, Video } from "lucide-react";
+import { ArrowLeft, Ban, Copy, Flag, ImagePlus, MoreVertical, Phone, Send, Undo2, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { removeChatMedia } from "@/lib/media-cleanup";
