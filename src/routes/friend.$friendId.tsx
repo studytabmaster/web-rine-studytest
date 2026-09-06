@@ -11,6 +11,7 @@ import { ReportDialog } from "@/components/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { initials, type Profile } from "@/lib/rine";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/friend/$friendId")({
   head: () => ({
@@ -74,6 +75,15 @@ function FriendProfilePage() {
           </AvatarFallback>
         </Avatar>
         <h1 className="mt-4 text-2xl font-bold">{friend?.display_name ?? "..."}</h1>
+        <p className="mt-1 flex items-center justify-center gap-1.5 text-xs">
+          <span
+            className={cn(
+              "inline-block size-2 rounded-full",
+              online ? "bg-green-400" : "bg-white/40",
+            )}
+          />
+          {online ? "オンライン" : "オフライン"}
+        </p>
         <p className="mt-1 text-sm opacity-80">
           {friend?.status_message || "ひとことは設定されていません"}
         </p>
