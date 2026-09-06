@@ -59,6 +59,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const pendingOffer = useRef<RTCSessionDescriptionInit | null>(null);
   const pendingIce = useRef<RTCIceCandidateInit[]>([]);
   const noAnswerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 通話履歴の記録用（発信者のみ保存）
+  const isCallerRef = useRef(false);
+  const answeredRef = useRef(false);
+  const outcomeRef = useRef<"missed" | "rejected" | null>(null);
+  const secondsRef = useRef(0);
+  const videoRef = useRef(false);
 
   const clearNoAnswerTimer = useCallback(() => {
     if (noAnswerTimer.current) {
@@ -87,6 +93,22 @@ export function CallProvider({ children }: { children: ReactNode }) {
       clearTimeout(noAnswerTimer.current);
       noAnswerTimer.current = null;
     }
+    // 発信者のみ通話履歴を保存（着信側は保存しない＝二重登録防止）
+    const to = peerIdRef.current;
+    if (user && isCallerRef.current && to) {
+      const status = outcomeRef.current ?? (answeredRef.current ? "answered" : "cancelled");
+      void supabase.from("call_logs").insert({
+        caller_id: user.id,
+        callee_id: to,
+        video: videoRef.current,
+        status,
+        duration_seconds: secondsRef.current,
+      });
+    }
+    isCallerRef.current = false;
+    answeredRef.current = false;
+    outcomeRef.current = null;
+    secondsRef.current = 0;
     pcRef.current?.close();
     pcRef.current = null;
     localRef.current?.getTracks().forEach((t) => t.stop());
@@ -101,7 +123,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setSeconds(0);
     setMuted(false);
     setCameraOff(false);
-  }, []);
+  }, [user]);
 
   const hangUp = useCallback(
     (notify = true) => {
