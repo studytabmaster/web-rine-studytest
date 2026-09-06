@@ -551,6 +551,31 @@ function ChatPage() {
         >
           <ImagePlus className="size-5" />
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              aria-label="スタンプを送る"
+            >
+              <Smile className="size-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="flex gap-1 p-2">
+            {STAMPS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className="rounded-xl p-1.5 text-3xl transition hover:bg-muted"
+                onClick={() => void sendStamp(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
