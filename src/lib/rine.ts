@@ -30,6 +30,33 @@ export type CallSignal = {
   created_at: string;
 };
 
+export type CallLogStatus = "answered" | "missed" | "rejected" | "cancelled";
+
+export type CallLog = {
+  id: string;
+  caller_id: string;
+  callee_id: string;
+  video: boolean;
+  status: CallLogStatus;
+  duration_seconds: number;
+  created_at: string;
+};
+
+/** トーク一覧などに表示する通話履歴ラベル */
+export function callLogLabel(log: CallLog, viewerId: string) {
+  const incoming = log.callee_id === viewerId;
+  switch (log.status) {
+    case "answered":
+      return `${incoming ? "着信" : "発信"} ${formatDuration(log.duration_seconds)}`;
+    case "missed":
+      return incoming ? "不在着信" : "応答なし";
+    case "rejected":
+      return incoming ? "着信（応答できず）" : "相手が通話中でした";
+    case "cancelled":
+      return "キャンセル";
+  }
+}
+
 export function initials(name: string) {
   return name.trim().slice(0, 2) || "??";
 }
