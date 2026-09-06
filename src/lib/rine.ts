@@ -109,6 +109,13 @@ export type GroupRead = {
 
 export const UNSENT_TEXT = "メッセージの送信を取り消しました";
 
+/** スタンプ（絵文字ベース、大きく表示する） */
+export const STAMPS = ["👍", "❤️", "😂"] as const;
+
+export function isStamp(content: string) {
+  return (STAMPS as readonly string[]).includes(content);
+}
+
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
