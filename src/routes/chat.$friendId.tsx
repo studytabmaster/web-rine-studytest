@@ -199,6 +199,23 @@ function ChatPage() {
     }
   };
 
+  /** スタンプを送信する（テキストメッセージとして保存し、大きく描画する） */
+  const sendStamp = async (stamp: string) => {
+    if (!user || blocked) return;
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ sender_id: user.id, receiver_id: friendId, content: stamp })
+      .select("*")
+      .maybeSingle();
+    if (error) {
+      toast.error("送信できませんでした");
+      return;
+    }
+    if (data) {
+      const row = data as Message;
+      setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
+    }
+  };
 
   const pickMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
