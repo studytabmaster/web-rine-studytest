@@ -35,6 +35,7 @@ function FriendProfilePage() {
   const [friend, setFriend] = useState<Profile | null>(null);
   const { isBlocked, block, unblock } = useBlocks();
   const blocked = isBlocked(friendId);
+  const online = usePresence(friendId);
 
   useEffect(() => {
     void supabase
