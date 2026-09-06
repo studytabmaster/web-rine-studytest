@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ImagePlus, LogOut, Send, Settings, Trash2, Undo2, UserPlus } from "lucide-react";
+import { ArrowLeft, ImagePlus, LogOut, Send, Settings, Smile, Trash2, Undo2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { removeChatMedia } from "@/lib/media-cleanup";
@@ -26,12 +26,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  STAMPS,
   UNSENT_TEXT,
   formatDateLabel,
   formatTime,
   initials,
   inspectAttachment,
   isNewDay,
+  isStamp,
   type Group,
   type GroupMessage,
   type GroupRead,
@@ -236,6 +238,24 @@ function GroupChatPage() {
     }
   };
 
+  /** スタンプを送信する */
+  const sendStamp = async (stamp: string) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("group_messages")
+      .insert({ group_id: groupId, sender_id: user.id, content: stamp })
+      .select("*")
+      .maybeSingle();
+    if (error) {
+      toast.error("送信できませんでした");
+      return;
+    }
+    if (data) {
+      const row = data as GroupMessage;
+      setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
+    }
+  };
+
   const pickMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -384,7 +404,7 @@ function GroupChatPage() {
             <div
               className={cn(
                 "shadow-soft",
-                m.image_url && !unsent
+                (m.image_url || isStamp(m.content)) && !unsent
                   ? "overflow-hidden rounded-2xl"
                   : cn(
                       "rounded-2xl px-3.5 py-2 text-sm",
@@ -400,6 +420,8 @@ function GroupChatPage() {
                 <p>{UNSENT_TEXT}</p>
               ) : m.image_url ? (
                 <ChatMedia path={m.image_url} mediaType={m.media_type} />
+              ) : isStamp(m.content) ? (
+                <p className="px-1 text-6xl leading-none">{m.content}</p>
               ) : (
                 <p className="whitespace-pre-wrap break-words">{m.content}</p>
               )}
@@ -500,6 +522,25 @@ function GroupChatPage() {
         >
           <ImagePlus className="size-5" />
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="ghost" size="icon" aria-label="スタンプを送る">
+              <Smile className="size-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="flex gap-1 p-2">
+            {STAMPS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className="rounded-xl p-1.5 text-3xl transition hover:bg-muted"
+                onClick={() => void sendStamp(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}

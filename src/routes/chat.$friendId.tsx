@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Ban, Copy, Flag, ImagePlus, MoreVertical, Phone, Send, Undo2, Video } from "lucide-react";
+import { ArrowLeft, Ban, Copy, Flag, ImagePlus, MoreVertical, Phone, Send, Smile, Undo2, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { removeChatMedia } from "@/lib/media-cleanup";
@@ -20,12 +20,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  STAMPS,
   UNSENT_TEXT,
   formatDateLabel,
   formatTime,
   initials,
   inspectAttachment,
   isNewDay,
+  isStamp,
   type Message,
   type Profile,
 } from "@/lib/rine";
@@ -197,6 +199,23 @@ function ChatPage() {
     }
   };
 
+  /** スタンプを送信する（テキストメッセージとして保存し、大きく描画する） */
+  const sendStamp = async (stamp: string) => {
+    if (!user || blocked) return;
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ sender_id: user.id, receiver_id: friendId, content: stamp })
+      .select("*")
+      .maybeSingle();
+    if (error) {
+      toast.error("送信できませんでした");
+      return;
+    }
+    if (data) {
+      const row = data as Message;
+      setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
+    }
+  };
 
   const pickMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -369,7 +388,7 @@ function ChatPage() {
             <div
               className={cn(
                 "shadow-soft",
-                m.image_url && !unsent
+                (m.image_url || isStamp(m.content)) && !unsent
                   ? "overflow-hidden rounded-2xl"
                   : cn(
                       "rounded-2xl px-3.5 py-2 text-sm",
@@ -385,6 +404,8 @@ function ChatPage() {
                 <p>{UNSENT_TEXT}</p>
               ) : m.image_url ? (
                 <ChatMedia path={m.image_url} mediaType={m.media_type} />
+              ) : isStamp(m.content) ? (
+                <p className="px-1 text-6xl leading-none">{m.content}</p>
               ) : (
                 <p className="whitespace-pre-wrap break-words">{m.content}</p>
               )}
@@ -530,6 +551,31 @@ function ChatPage() {
         >
           <ImagePlus className="size-5" />
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              aria-label="スタンプを送る"
+            >
+              <Smile className="size-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="flex gap-1 p-2">
+            {STAMPS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className="rounded-xl p-1.5 text-3xl transition hover:bg-muted"
+                onClick={() => void sendStamp(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
