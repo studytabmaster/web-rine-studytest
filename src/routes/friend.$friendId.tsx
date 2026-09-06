@@ -4,6 +4,7 @@ import { ArrowLeft, Ban, Flag, MessageSquare, Phone, UserMinus, Video } from "lu
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePresence } from "@/hooks/usePresence";
 import { useCall } from "@/components/CallProvider";
 import { useBlocks } from "@/hooks/useBlocks";
 import { ReportDialog } from "@/components/ReportDialog";
