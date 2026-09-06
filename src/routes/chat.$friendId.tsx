@@ -388,7 +388,7 @@ function ChatPage() {
             <div
               className={cn(
                 "shadow-soft",
-                m.image_url && !unsent
+                (m.image_url || isStamp(m.content)) && !unsent
                   ? "overflow-hidden rounded-2xl"
                   : cn(
                       "rounded-2xl px-3.5 py-2 text-sm",
@@ -404,6 +404,8 @@ function ChatPage() {
                 <p>{UNSENT_TEXT}</p>
               ) : m.image_url ? (
                 <ChatMedia path={m.image_url} mediaType={m.media_type} />
+              ) : isStamp(m.content) ? (
+                <p className="px-1 text-6xl leading-none">{m.content}</p>
               ) : (
                 <p className="whitespace-pre-wrap break-words">{m.content}</p>
               )}
