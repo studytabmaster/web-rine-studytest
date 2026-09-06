@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Ban, Copy, Flag, ImagePlus, MoreVertical, Phone, Send, Undo2, Video } from "lucide-react";
+import { ArrowLeft, Ban, Copy, Flag, ImagePlus, MoreVertical, Phone, Send, Smile, Undo2, Video } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { removeChatMedia } from "@/lib/media-cleanup";
@@ -20,12 +20,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  STAMPS,
   UNSENT_TEXT,
   formatDateLabel,
   formatTime,
   initials,
   inspectAttachment,
   isNewDay,
+  isStamp,
   type Message,
   type Profile,
 } from "@/lib/rine";
