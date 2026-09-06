@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ImagePlus, LogOut, Send, Settings, Trash2, Undo2, UserPlus } from "lucide-react";
+import { ArrowLeft, ImagePlus, LogOut, Send, Settings, Smile, Trash2, Undo2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { removeChatMedia } from "@/lib/media-cleanup";
@@ -26,12 +26,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  STAMPS,
   UNSENT_TEXT,
   formatDateLabel,
   formatTime,
   initials,
   inspectAttachment,
   isNewDay,
+  isStamp,
   type Group,
   type GroupMessage,
   type GroupRead,
