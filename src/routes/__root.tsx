@@ -13,8 +13,25 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CallProvider } from "@/components/CallProvider";
+import { GroupCallProvider } from "@/components/GroupCallProvider";
+import { Notifications } from "@/components/Notifications";
 import { Toaster } from "@/components/ui/sonner";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
+// 広告コンポーネント（静的HTML経由で読み込むことでRefererを正常送信＆document.writeを確実に動作させる）
+function AdMaxBanner({ id }: { id: string }) {
+  return (
+    <iframe
+      src={`/ad.html?id=${id}`}
+      width={160}
+      height={600}
+      title={`ad-${id}`}
+      scrolling="no"
+      className="w-[160px] h-[600px] border-0 overflow-hidden rounded bg-muted/10 shadow-sm"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+    />
+  );
+}
 
 function NotFoundComponent() {
   return (
@@ -94,6 +111,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#06c755" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "RINE" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "mobile-web-app-capable", content: "yes" },
     ],
     links: [
       {
@@ -107,6 +129,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/favicon.ico" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
 
@@ -137,12 +161,30 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CallProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
+          <GroupCallProvider>
+            <Notifications />
+            <OfflineBanner />
+            {/* メイン画面（中央・スマホ幅） */}
+            <Outlet />
+
+            {/* PC右サイドの広告（画面幅840px以上で右側に固定表示） */}
+            <aside
+              aria-label="スポンサーリンク"
+              className="hidden min-[840px]:flex fixed right-4 top-14 z-30 flex-col gap-4 max-h-[calc(100vh-4rem)] overflow-y-auto pointer-events-auto"
+            >
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-muted-foreground mb-1">スポンサーリンク</span>
+                <AdMaxBanner id="8e72c87da03a9f6b14801ad9e35ce69d" />
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-muted-foreground mb-1">スポンサーリンク</span>
+                <AdMaxBanner id="e5719f08d845ec8ceaacd22f674c6316" />
+              </div>
+            </aside>
+          </GroupCallProvider>
         </CallProvider>
       </AuthProvider>
       <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );
 }
-
